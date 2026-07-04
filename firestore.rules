@@ -1,1 +1,21 @@
-// placeholder
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. TOLAK SEMUA AKSES SECARA DEFAULT (SATPAM UTAMA)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. FUNGSI VALIDASI TOKEN STEALTH & ALIAS
+    function isStealthMember() {
+      return request.auth != null &&
+             request.auth.token.stealthVerified == true &&
+             request.auth.token.userAlias in ['SanQua', 'Hass', 'Vit', 'Cleo', 'LeMinerale'];
+    }
+
+    // 3. AKSES RUANG OBROLAN UMUM (Hanya untuk 5 member)
+    match /general_chat/{messageId} {
+      allow read, write: if isStealthMember();
+    }
+  }
+}
