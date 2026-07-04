@@ -1,1 +1,29 @@
-// placeholder
+{
+  "expo": {
+    "name": "MyCalculator-Pro",
+    "slug": "mycalculator",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0A0A0A",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0A"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.stealth.mycalculatorpro",
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0A"
+      },
+      "googleServicesFile": "./google-services.json"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_YOUR_EXPO_PROJECT_ID_LATER"
+      }
+    }
+  }
+}
