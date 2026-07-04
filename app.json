@@ -20,6 +20,18 @@
       },
       "googleServicesFile": "./google-services.json"
     },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 21
+          }
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "REPLACE_WITH_YOUR_EXPO_PROJECT_ID_LATER"
