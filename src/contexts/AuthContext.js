@@ -8,15 +8,27 @@ export const AuthProvider = ({ children }) => {
   const [userAlias, setUserAlias] = useState(null);
 
   const signInWithAlias = async (alias) => {
-    await auth().signInAnonymously();
-    setUserAlias(alias);
-    setIsAuthenticated(true);
+    try {
+      await auth().signInAnonymously();
+      setUserAlias(alias);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('[AuthContext] signInAnonymously gagal:', error);
+      throw error; // lempar ulang agar caller bisa handle
+    }
   };
 
   const signOut = async () => {
-    await auth().signOut();
-    setIsAuthenticated(false);
-    setUserAlias(null);
+    try {
+      await auth().signOut();
+      setIsAuthenticated(false);
+      setUserAlias(null);
+    } catch (error) {
+      console.error('[AuthContext] signOut gagal:', error);
+      // Tetap reset state lokal walau Firebase gagal
+      setIsAuthenticated(false);
+      setUserAlias(null);
+    }
   };
 
   return (
