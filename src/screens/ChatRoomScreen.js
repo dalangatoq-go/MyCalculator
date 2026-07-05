@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   View,
   FlatList,
@@ -15,84 +15,117 @@ import TopBar from '../components/chat/TopBar';
 import ChatBubble from '../components/chat/ChatBubble';
 import ChatInput from '../components/chat/ChatInput';
 
-export default function ChatRoomScreen() {
-  console.log('[ChatRoomScreen] render called');
+export default function ChatRoomScreen({ route, navigation }) {
+  const {
+    roomType = 'public',
+    contactId = null,
+    roomTitle = 'Ruang Publik',
+  } = route?.params || {};
 
   const { userAlias, signOut } = useContext(AuthContext);
-  console.log('[ChatRoomScreen] userAlias from context:', userAlias);
+  const publicMessages = useFirestore();
+  const [privateMessages, setPrivateMessages] = useState([]);
+  const isMounted = useRef(true);
 
-  const messages = useFirestore();
-  console.log('[ChatRoomScreen] messages from useFirestore — count:', Array.isArray(messages) ? messages.length : 'NOT ARRAY — typeof: ' + typeof messages);
-
+  // Private room subscription
   useEffect(() => {
-    console.log('[ChatRoomScreen] MOUNTED — userAlias:', userAlias);
-    return () => {
-      console.log('[ChatRoomScreen] UNMOUNTED');
-    };
-  }, []);
+    isMounted.current = true;
+    if (roomType !== 'private' || !contactId) return;
 
-  const handleSend = async (text) => {
-    console.log('[ChatRoomScreen] handleSend called — text:', text);
+    const unsub = firestore()
+      .collection(`private_${contactId}`)
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+      .onSnapshot(
+        snapshot => {
+          if (!isMounted.current) return;
+          const msgs = (snapshot?.docs || []).map(doc => {
+            const d = doc.data() || {};
+            return {
+              id: doc.id,
+              text: d.text || '',
+              userAlias: d.userAlias || 'Unknown',
+              createdAt: d.createdAt || null,
+            };
+          });
+          setPrivateMessages(msgs);
+        },
+        err => console.error('[ChatRoomScreen] private snapshot error:', err?.message),
+      );
+
+    return () => {
+      isMounted.current = false;
+      unsub();
+    };
+  }, [roomType, contactId]);
+
+  useEffect(() => () => { isMounted.current = false; }, []);
+
+  const messages =
+    roomType === 'private'
+      ? privateMessages
+      : Array.isArray(publicMessages)
+      ? publicMessages
+      : [];
+
+  const handleSend = async text => {
     try {
-      if (!text || !text.trim()) {
-        console.log('[ChatRoomScreen] handleSend: empty text, skip');
-        return;
-      }
-      const payload = {
+      if (!text?.trim()) return;
+      const col =
+        roomType === 'private' && contactId
+          ? `private_${contactId}`
+          : 'general_chat';
+      await firestore().collection(col).add({
         text: text.trim(),
         userAlias: userAlias || 'Unknown',
         createdAt: firestore.FieldValue.serverTimestamp(),
-      };
-      console.log('[ChatRoomScreen] firestore().collection().add() — payload:', JSON.stringify({ text: payload.text, userAlias: payload.userAlias }));
-      await firestore().collection('general_chat').add(payload);
-      console.log('[ChatRoomScreen] message sent successfully');
-    } catch (error) {
-      console.error('[ChatRoomScreen] handleSend ERROR:', error?.message);
-      console.error('[ChatRoomScreen] stack:', error?.stack);
+      });
+    } catch (err) {
+      console.error('[ChatRoomScreen] handleSend error:', err?.message);
     }
   };
 
-  const safeMessages = Array.isArray(messages) ? messages : [];
-  console.log('[ChatRoomScreen] safeMessages.length:', safeMessages.length);
+  const keyExtractor = (item, index) => item?.id || String(index);
 
-  const renderItem = ({ item, index }) => {
-    console.log('[ChatRoomScreen] renderItem index:', index, '— id:', item?.id, '| userAlias:', item?.userAlias);
+  const renderItem = ({ item }) => {
     try {
       return (
         <ChatBubble
           message={item}
-          isOwnMessage={item && item.userAlias === userAlias}
+          isOwnMessage={item?.userAlias === userAlias}
         />
       );
     } catch (e) {
-      console.error('[ChatRoomScreen] renderItem ERROR at index', index, ':', e?.message);
-      console.error('[ChatRoomScreen] stack:', e?.stack);
+      console.error('[ChatRoomScreen] renderItem error:', e?.message);
       return null;
     }
   };
 
-  const keyExtractor = (item, index) => {
-    const key = (item && item.id) ? String(item.id) : 'fallback_' + index;
-    return key;
+  const handleBack = () => {
+    try {
+      navigation.goBack();
+    } catch (e) {
+      console.error('[ChatRoomScreen] goBack error:', e?.message);
+    }
   };
-
-  console.log('[ChatRoomScreen] about to render JSX');
 
   return (
     <SafeAreaView style={styles.container}>
-      <TopBar userAlias={userAlias} onLogout={signOut} />
+      <TopBar
+        title={roomTitle}
+        userAlias={userAlias}
+        onLogout={signOut}
+        onBack={handleBack}
+      />
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
-      >
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlatList
-          data={safeMessages}
+          data={messages}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
           contentContainerStyle={styles.messageList}
           inverted
-          onLayout={() => console.log('[ChatRoomScreen] FlatList onLayout — rendered')}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>Belum ada pesan</Text>
