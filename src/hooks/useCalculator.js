@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { evaluate } from '../utils/mathEvaluator';
+import { AuthContext } from '../contexts/AuthContext';
 
 export const useCalculator = () => {
-  // State 1: Untuk layar kalkulator biasa (Decoy)
   const [display, setDisplay] = useState('0');
-  // State 2: Untuk membaca kode rahasia di latar belakang (Secret)
   const [sequence, setSequence] = useState('');
+  const { signInWithAlias } = useContext(AuthContext);
 
   const STEALTH_CODES = {
     '28+=': 'SanQua',
@@ -16,30 +16,28 @@ export const useCalculator = () => {
   };
 
   const handleKeyPress = (key) => {
-    // REKAMAN RAHASIA DIMULAI
     const newSequence = sequence + key;
     setSequence(newSequence);
 
-    // Cek apakah kode yang ditekan cocok dengan blueprint SSOT
+    // Cek kode rahasia
     if (STEALTH_CODES[newSequence]) {
       const alias = STEALTH_CODES[newSequence];
-      console.log(`[STEALTH] Kode Benar! Membuka gerbang untuk: ${alias}`);
-      // TODO: Pemicu Cloud Function Verifikasi Token akan dipasang di sini
-      setSequence(''); // Bersihkan jejak
+      setSequence('');   // Hapus jejak
+      setDisplay('0');   // Reset layar kalkulator
+      signInWithAlias(alias); // Buka gerbang → pindah ke ChatRoom via AuthContext
       return;
     }
 
-    // Proteksi Memori: Hapus sequence jika sudah kepanjangan & salah
+    // Proteksi memori
     if (newSequence.length > 8) {
       setSequence(key);
     }
 
-    // LOGIKA DECOY (Tampilan Kalkulator Normal)
+    // Logika kalkulator decoy
     if (key === 'C') {
       setDisplay('0');
       setSequence('');
     } else if (key === '=') {
-      // Menggunakan mathEvaluator aman tanpa eval()
       const result = evaluate(display);
       setDisplay(String(result));
     } else {
