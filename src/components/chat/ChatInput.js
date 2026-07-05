@@ -2,8 +2,17 @@ import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 export default function ChatInput({ onSend }) {
+  console.log('[ChatInput] render');
   const [text, setText] = useState('');
-  const handleSend = () => { if (text.trim()) { onSend(text); setText(''); } };
+
+  const handleSend = () => {
+    console.log('[ChatInput] handleSend — text:', text);
+    if (text.trim()) {
+      onSend(text);
+      setText('');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <TextInput
@@ -19,6 +28,7 @@ export default function ChatInput({ onSend }) {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: { flexDirection: 'row', padding: 10, backgroundColor: '#000' },
   input: { flex: 1, color: '#FFF', borderBottomWidth: 1, borderColor: '#333' },
