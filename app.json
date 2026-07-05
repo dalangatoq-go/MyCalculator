@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "MyCalculator-Pro",
-    "slug": "mycalculator",
+    "slug": "MyCalculator-Pro",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -34,7 +34,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "REPLACE_WITH_YOUR_EXPO_PROJECT_ID_LATER"
+        "projectId": "dc61d589-9149-4f89-b4e5-1f2c8d6f984c"
       }
     }
   }
