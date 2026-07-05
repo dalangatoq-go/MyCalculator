@@ -1,31 +1,23 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { useCalculator } from '../hooks/useCalculator';
+import Display from '../components/calculator/Display';
+import Keypad from '../components/calculator/Keypad';
 
-export default function CalculatorScreen({ navigation }) {
+export default function CalculatorScreen() {
   const { display, handleKeyPress } = useCalculator();
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.displayContainer}>
-        <Text style={styles.displayText}>{display}</Text>
+      <View style={styles.displayArea}>
+        <Display value={display} />
       </View>
-      <View style={styles.keypad}>
-        {['7','8','9','/','4','5','6','*','1','2','3','-','C','0','=','+'].map((btn) => (
-          <TouchableOpacity key={btn} style={styles.button} onPress={() => handleKeyPress(btn)}>
-            <Text style={styles.buttonText}>{btn}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <Keypad onKeyPress={handleKeyPress} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000', justifyContent: 'flex-end' },
-  displayContainer: { padding: 30, alignItems: 'flex-end' },
-  displayText: { color: '#FFD700', fontSize: 48 },
-  keypad: { flexDirection: 'row', flexWrap: 'wrap', padding: 10 },
-  button: { width: '25%', height: 80, justifyContent: 'center', alignItems: 'center' },
-  buttonText: { color: '#FFF', fontSize: 24 }
+  displayArea: { flex: 1, justifyContent: 'flex-end' },
 });
