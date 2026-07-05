@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   FlatList,
@@ -17,7 +17,6 @@ import ChatInput from '../components/chat/ChatInput';
 export default function ChatRoomScreen() {
   const { userAlias, signOut } = useContext(AuthContext);
   const messages = useFirestore();
-  const flatListRef = useRef(null);
 
   const handleSend = async (text) => {
     try {
@@ -40,7 +39,6 @@ export default function ChatRoomScreen() {
         keyboardVerticalOffset={0}
       >
         <FlatList
-          ref={flatListRef}
           data={messages}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
