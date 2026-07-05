@@ -15,8 +15,7 @@ export const useCalculator = () => {
     '88+=': 'LeMinerale',
   };
 
-  const handleKeyPress = (key) => {
-    // Tombol C selalu reset tampilan dan sequence — cek paling awal
+  const handleKeyPress = async (key) => {
     if (key === 'C') {
       setDisplay('0');
       setSequence('');
@@ -25,24 +24,25 @@ export const useCalculator = () => {
 
     const newSequence = sequence + key;
 
-    // Cek kode rahasia
     if (STEALTH_CODES[newSequence]) {
       const alias = STEALTH_CODES[newSequence];
-      setSequence('');   // Hapus jejak
-      setDisplay('0');   // Reset layar kalkulator
-      signInWithAlias(alias);
+      setSequence('');
+      setDisplay('0');
+      try {
+        await signInWithAlias(alias);
+      } catch (error) {
+        console.error('[useCalculator] signInWithAlias gagal:', error);
+      }
       return;
     }
 
-    // Proteksi memori — jika sequence terlalu panjang, mulai ulang dari key ini
     const safeSequence = newSequence.length > 8 ? key : newSequence;
     setSequence(safeSequence);
 
-    // Logika kalkulator
     if (key === '=') {
       const result = evaluate(display);
       setDisplay(String(result));
-      setSequence(''); // Reset sequence setelah =
+      setSequence('');
     } else {
       setDisplay(display === '0' ? key : display + key);
     }
