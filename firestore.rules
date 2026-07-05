@@ -1,21 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 1. TOLAK SEMUA AKSES SECARA DEFAULT (SATPAM UTAMA)
+    // TOLAK SEMUA AKSES SECARA DEFAULT
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // 2. FUNGSI VALIDASI TOKEN STEALTH & ALIAS
-    function isStealthMember() {
-      return request.auth != null &&
-             request.auth.token.stealthVerified == true &&
-             request.auth.token.userAlias in ['SanQua', 'Hass', 'Vit', 'Cleo', 'LeMinerale'];
-    }
-
-    // 3. AKSES RUANG OBROLAN UMUM (Hanya untuk 5 member)
+    // AKSES RUANG OBROLAN — hanya user yang sudah sign in (anonymous)
+    // Catatan: anonymous auth digunakan lewat kode stealth di kalkulator
     match /general_chat/{messageId} {
-      allow read, write: if isStealthMember();
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasAll(['text', 'userAlias', 'createdAt'])
+                    && request.resource.data.text is string
+                    && request.resource.data.text.size() > 0
+                    && request.resource.data.text.size() <= 1000
+                    && request.resource.data.userAlias is string;
+      allow update, delete: if false;
     }
   }
 }
