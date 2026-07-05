@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet,
-  KeyboardAvoidingView, Platform, ScrollView,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProjectCard from './ProjectCard';
@@ -67,7 +67,7 @@ export default function ProjectAreaTab() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
-      {/* Header */}
+      {/* Header row: count + add button */}
       <View style={styles.headerRow}>
         <Text style={styles.count}>{tasks.length} item</Text>
         <TouchableOpacity
@@ -78,7 +78,7 @@ export default function ProjectAreaTab() {
         </TouchableOpacity>
       </View>
 
-      {/* Form */}
+      {/* Add-task form */}
       {showForm && (
         <View style={styles.form}>
           <TextInput
@@ -123,16 +123,20 @@ export default function ProjectAreaTab() {
         </View>
       )}
 
-      {/* List */}
+      {/* Task list */}
       <FlatList
         data={tasks}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <ProjectCard item={item} onToggle={handleToggle} onDelete={handleDelete} />
+          <ProjectCard
+            item={item}
+            onToggle={handleToggle}
+            onDelete={handleDelete}
+          />
         )}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          !showForm ? <EmptyState icon="📋" message="Belum ada task.\nKetuk + Tambah untuk mulai." /> : null
+          <EmptyState icon="📋" message="Belum ada task. Tap + Tambah untuk mulai." />
         }
         showsVerticalScrollIndicator={false}
       />
@@ -141,61 +145,61 @@ export default function ProjectAreaTab() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#0A0A0A' },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 8,
+    paddingVertical: 10,
   },
-  count: { color: '#555', fontSize: 13 },
+  count: { color: '#666', fontSize: 13 },
   addBtn: {
     backgroundColor: '#FFD700',
+    borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 7,
-    borderRadius: 20,
   },
   addBtnText: { color: '#000', fontSize: 13, fontWeight: '700' },
   form: {
-    margin: 16,
+    marginHorizontal: 16,
+    marginBottom: 8,
     backgroundColor: '#141414',
     borderRadius: 16,
-    padding: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#2A2A2A',
   },
   input: {
     backgroundColor: '#0A0A0A',
-    color: '#FFF',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 10,
-    fontSize: 14,
     borderWidth: 1,
     borderColor: '#222',
+    borderRadius: 10,
+    padding: 10,
+    color: '#FFF',
+    fontSize: 14,
+    marginBottom: 10,
   },
   inputMulti: { minHeight: 60, textAlignVertical: 'top' },
-  prioRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 6 },
+  prioRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 6 },
   prioLabel: { color: '#666', fontSize: 13, marginRight: 4 },
   prioBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    flex: 1,
+    paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#333',
+    alignItems: 'center',
   },
-  prioBtnActive: { backgroundColor: '#FFD700', borderColor: '#FFD700' },
-  prioBtnText: { color: '#666', fontSize: 12, fontWeight: '500' },
-  prioBtnTextActive: { color: '#000', fontWeight: '700' },
+  prioBtnActive: { borderColor: '#FFD700', backgroundColor: '#FFD70022' },
+  prioBtnText: { color: '#555', fontSize: 12, fontWeight: '600' },
+  prioBtnTextActive: { color: '#FFD700' },
   saveBtn: {
     backgroundColor: '#FFD700',
     borderRadius: 10,
-    paddingVertical: 12,
+    paddingVertical: 11,
     alignItems: 'center',
   },
-  saveBtnText: { color: '#000', fontSize: 15, fontWeight: '700' },
-  list: { paddingBottom: 40 },
+  saveBtnText: { color: '#000', fontSize: 14, fontWeight: '700' },
+  list: { paddingVertical: 4, paddingBottom: 40 },
 });
