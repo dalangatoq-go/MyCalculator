@@ -12,34 +12,37 @@ export const useCalculator = () => {
     '48+=': 'Hass',
     '15+=': 'Vit',
     '55+=': 'Cleo',
-    '88+=': 'LeMinerale'
+    '88+=': 'LeMinerale',
   };
 
   const handleKeyPress = (key) => {
+    // Tombol C selalu reset tampilan dan sequence — cek paling awal
+    if (key === 'C') {
+      setDisplay('0');
+      setSequence('');
+      return;
+    }
+
     const newSequence = sequence + key;
-    setSequence(newSequence);
 
     // Cek kode rahasia
     if (STEALTH_CODES[newSequence]) {
       const alias = STEALTH_CODES[newSequence];
       setSequence('');   // Hapus jejak
       setDisplay('0');   // Reset layar kalkulator
-      signInWithAlias(alias); // Buka gerbang → pindah ke ChatRoom via AuthContext
+      signInWithAlias(alias);
       return;
     }
 
-    // Proteksi memori
-    if (newSequence.length > 8) {
-      setSequence(key);
-    }
+    // Proteksi memori — jika sequence terlalu panjang, mulai ulang dari key ini
+    const safeSequence = newSequence.length > 8 ? key : newSequence;
+    setSequence(safeSequence);
 
-    // Logika kalkulator decoy
-    if (key === 'C') {
-      setDisplay('0');
-      setSequence('');
-    } else if (key === '=') {
+    // Logika kalkulator
+    if (key === '=') {
       const result = evaluate(display);
       setDisplay(String(result));
+      setSequence(''); // Reset sequence setelah =
     } else {
       setDisplay(display === '0' ? key : display + key);
     }
