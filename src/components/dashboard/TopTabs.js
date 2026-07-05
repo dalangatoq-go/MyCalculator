@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 const TABS = ['Kontak', 'Ruang Publik', 'Project Area'];
 
