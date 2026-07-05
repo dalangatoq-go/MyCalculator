@@ -27,24 +27,55 @@
 | google-services.json valid JSON | ✅ PASS | |
 | Assets tersedia | ✅ PASS | icon.png, splash.png, adaptive-icon.png |
 | Dependency kompatibel | ✅ PASS | Semua package cocok dengan Expo SDK 50 + RN 0.73 |
-| **EAS Build (Android Production)** | ✅ **BUILD SUCCESSFUL** | AAB berhasil dihasilkan |
+| **EAS Build AAB (production)** | ✅ **BUILD SUCCESSFUL** | AAB berhasil dihasilkan |
+| **EAS Build APK (production-apk)** | ✅ **BUILD SUCCESSFUL** | APK berhasil dihasilkan |
 
 ---
 
-## EAS Build Result
+## EAS Build #1 — AAB Production
 
 | Field | Value |
 |-------|-------|
+| **Tanggal Build** | 5 Juli 2026, 10:10 – 10:16 WIB |
 | **Status** | ✅ **FINISHED (BUILD SUCCESSFUL)** |
-| Build ID | `b462478b-de0b-4722-bea6-1cd8fe2a6a94` |
-| Platform | Android |
-| Profile | production |
-| Distribution | store (AAB) |
-| App Version | 1.0.0 |
-| Version Code | 1 |
-| Build Duration | ~5 menit 32 detik |
-| AAB Download | https://expo.dev/artifacts/eas/hNPNo5JAoEZqoipAIRKg-aQUqJ71cHXYsbGtHWb8Z_Q.aab |
-| Build Dashboard | https://expo.dev/accounts/dutchman221/projects/MyCalculator-Pro/builds/b462478b-de0b-4722-bea6-1cd8fe2a6a94 |
+| **Build ID** | `b462478b-de0b-4722-bea6-1cd8fe2a6a94` |
+| **Platform** | Android |
+| **Profile** | `production` |
+| **Output** | `.aab` (Android App Bundle — Play Store) |
+| **Distribution** | store |
+| **App Version** | 1.0.0 |
+| **Version Code** | 1 |
+| **Git Commit** | `cdda397eb2d058b554b38d01d10f8b9c92b9158a` |
+| **Build Image** | `ubuntu-26.04-jdk-17-ndk-r27b` |
+| **Java Version** | JDK 17 (`/usr/lib/jvm/java-17-openjdk-amd64`) |
+| **Gradle** | 8.3 |
+| **Build Duration** | 5 menit 32 detik |
+| **Build URL** | https://expo.dev/accounts/dutchman221/projects/MyCalculator-Pro/builds/b462478b-de0b-4722-bea6-1cd8fe2a6a94 |
+| **AAB Download** | https://expo.dev/artifacts/eas/hNPNo5JAoEZqoipAIRKg-aQUqJ71cHXYsbGtHWb8Z_Q.aab |
+
+---
+
+## EAS Build #2 — APK Production
+
+| Field | Value |
+|-------|-------|
+| **Tanggal Build** | 5 Juli 2026, 10:31 – 10:37 WIB |
+| **Status** | ✅ **FINISHED (BUILD SUCCESSFUL)** |
+| **Build ID** | `f3af8dfe-0bab-42b7-9742-bb3e99d028ad` |
+| **Platform** | Android |
+| **Profile** | `production-apk` |
+| **Output** | `.apk` (langsung install ke perangkat Android) |
+| **Nama File** | `sHOoEs_2BZk7f_GuEFKy4fmhmP982aGaDTDUz0m9i3Q.apk` |
+| **Distribution** | store |
+| **App Version** | 1.0.0 |
+| **Version Code** | 1 |
+| **Git Commit** | `cdda397eb2d058b554b38d01d10f8b9c92b9158a` |
+| **Build Image** | `ubuntu-26.04-jdk-17-ndk-r27b` |
+| **Java Version** | JDK 17 (`/usr/lib/jvm/java-17-openjdk-amd64`) |
+| **Gradle** | 8.3 |
+| **Build Duration** | 5 menit 49 detik |
+| **Build URL** | https://expo.dev/accounts/dutchman221/projects/MyCalculator-Pro/builds/f3af8dfe-0bab-42b7-9742-bb3e99d028ad |
+| **APK Download** | https://expo.dev/artifacts/eas/sHOoEs_2BZk7f_GuEFKy4fmhmP982aGaDTDUz0m9i3Q.apk |
 
 ---
 
@@ -58,8 +89,8 @@
 | kotlinVersion | 1.9.24 |
 | **JDK** | **17** (via `image: "latest"` di eas.json) |
 | Android Gradle Plugin | 8.x (kompatibel dengan RN 0.73) |
-| Build Image | latest (Java 17) |
-| Diatur via | `expo-build-properties` plugin + `eas.json` |
+| Gradle | 8.3 |
+| Build Image | `ubuntu-26.04-jdk-17-ndk-r27b` |
 
 ---
 
@@ -76,7 +107,7 @@
 
 ---
 
-## Expo Configuration
+## Expo Configuration (app.json)
 
 ```json
 {
@@ -90,15 +121,24 @@
 }
 ```
 
+## EAS Build Profiles (eas.json)
+
+| Profile | Output | Java | Tujuan |
+|---------|--------|------|--------|
+| `production` | `.aab` | 17 | Upload ke Google Play Store |
+| `production-apk` | `.apk` | 17 | Install langsung ke perangkat |
+| `preview` | `.apk` | 17 | Testing internal |
+| `development` | `.apk` | 17 | Development client |
+
 ---
 
 ## Files Modified (seluruh perubahan dari versi awal)
 
 | File | Tindakan | Alasan |
 |------|----------|--------|
-| `app.json` | Diubah | Tambah `owner`, `icon`, `splash.image`, `assetBundlePatterns`, `adaptiveIcon.foregroundImage`, `android.permissions`, `extra.eas.projectId` baru |
-| `package.json` | Diubah | Hapus `@react-native/assets-registry` (paket internal), tambah `react-native-gesture-handler`, pin firebase ke `^20.3.0` |
-| `eas.json` | Diubah | Tambah `image: "latest"` (Java 17), `cli.appVersionSource: "local"` |
+| `app.json` | Diubah | Tambah `owner`, `icon`, `splash`, `assetBundlePatterns`, `adaptiveIcon`, `android.permissions`, `extra.eas.projectId` |
+| `package.json` | Diubah | Hapus `@react-native/assets-registry`, tambah `react-native-gesture-handler`, pin firebase `^20.3.0` |
+| `eas.json` | Diubah | Tambah `image: "latest"` (Java 17), `cli.appVersionSource: "local"`, profile `production-apk` |
 | `metro.config.js` | Dibuat baru | Wajib untuk Expo SDK 50 |
 | `src/hooks/useCalculator.js` | Diubah | Perbaiki logika key C, reset sequence setelah `=` |
 | `src/screens/CalculatorScreen.js` | Diubah | Hapus prop `navigation` unused |
@@ -108,7 +148,7 @@
 | `assets/icon.png` | Dibuat baru | Wajib untuk EAS Build Android |
 | `assets/splash.png` | Dibuat baru | Wajib untuk EAS Build Android |
 | `assets/adaptive-icon.png` | Dibuat baru | Wajib untuk Android adaptive icon |
-| `BUILD_REPORT.md` | Dibuat baru | Dokumentasi final |
+| `BUILD_REPORT.md` | Dibuat/Diperbarui | Dokumentasi final |
 
 ---
 
@@ -124,21 +164,6 @@
 
 ---
 
-## Build Environment Analysis
-
-### Build #1 — FAILED
-- **Error**: `Android Gradle Plugin requires Java 17 to run. You are currently using Java 11.`
-- **Root Cause**: EAS CLI tidak bisa detect Expo SDK dari project tanpa `node_modules` → memilih build worker image lama → Java 11
-- **Fix**: Tambah `"image": "latest"` di semua profile `eas.json`
-
-### Build #2 — SUCCESS ✅
-- **Java Version**: JDK 17 (via `image: "latest"`)
-- **AGP**: 8.x (kompatibel dengan Java 17)
-- **Gradle**: 8.3
-- **Status**: BUILD SUCCESSFUL → AAB dihasilkan
-
----
-
 ## Cara Build (untuk Developer Berikutnya)
 
 ```bash
@@ -149,16 +174,16 @@ cd MyCalculator
 # 2. Install dependencies
 npm install
 
-# 3. (Opsional) Cek kesehatan project
-npx expo-doctor
+# 3. Login ke Expo
+eas login  # gunakan akun dutchman221
 
-# 4. Login ke Expo (gunakan akun dutchman221 atau buat akun baru + eas init)
-eas login
-
-# 5. Build production (AAB untuk Play Store)
+# 4a. Build AAB untuk Play Store
 eas build -p android --profile production
 
-# 6. Build preview (APK untuk testing internal)
+# 4b. Build APK untuk install langsung
+eas build -p android --profile production-apk
+
+# 4c. Build APK internal testing
 eas build -p android --profile preview
 ```
 
@@ -190,12 +215,10 @@ NONE
 
 ## Final Status
 
-**STATUS: READY FOR EXPO EAS BUILD**
+**STATUS: READY FOR EXPO EAS BUILD ✅**
 
-**BUILD SUCCESSFUL ✅**
+**AAB BUILD SUCCESSFUL ✅** — `production` profile  
+**APK BUILD SUCCESSFUL ✅** — `production-apk` profile
 
-> Android App Bundle (.aab) telah berhasil dihasilkan pada:
-> https://expo.dev/artifacts/eas/hNPNo5JAoEZqoipAIRKg-aQUqJ71cHXYsbGtHWb8Z_Q.aab
->
-> Build ID: `b462478b-de0b-4722-bea6-1cd8fe2a6a94`
-> Account: `@dutchman221/MyCalculator-Pro`
+> **APK Download**: https://expo.dev/artifacts/eas/sHOoEs_2BZk7f_GuEFKy4fmhmP982aGaDTDUz0m9i3Q.apk  
+> **AAB Download**: https://expo.dev/artifacts/eas/hNPNo5JAoEZqoipAIRKg-aQUqJ71cHXYsbGtHWb8Z_Q.aab
