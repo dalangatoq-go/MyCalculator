@@ -23,11 +23,15 @@
     "plugins": [
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
+      "@react-native-firebase/firestore",
       [
         "expo-build-properties",
         {
           "android": {
-            "minSdkVersion": 21
+            "minSdkVersion": 21,
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "kotlinVersion": "1.9.24"
           }
         }
       ]
