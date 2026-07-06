@@ -1,12 +1,12 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
-  View,
   FlatList,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  StyleSheet,
   Text,
+  View,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { AuthContext } from '../contexts/AuthContext';
@@ -17,17 +17,16 @@ import ChatInput from '../components/chat/ChatInput';
 
 export default function ChatRoomScreen({ route, navigation }) {
   const {
-    roomType = 'public',
+    roomType  = 'public',
     contactId = null,
     roomTitle = 'Ruang Publik',
   } = route?.params || {};
 
   const { userAlias, signOut } = useContext(AuthContext);
-  const publicMessages = useFirestore();
+  const publicMessages          = useFirestore();
   const [privateMessages, setPrivateMessages] = useState([]);
   const isMounted = useRef(true);
 
-  // Private room subscription
   useEffect(() => {
     isMounted.current = true;
     if (roomType !== 'private' || !contactId) return;
@@ -39,75 +38,49 @@ export default function ChatRoomScreen({ route, navigation }) {
       .onSnapshot(
         snapshot => {
           if (!isMounted.current) return;
-          const msgs = (snapshot?.docs || []).map(doc => {
-            const d = doc.data() || {};
-            return {
-              id: doc.id,
-              text: d.text || '',
-              userAlias: d.userAlias || 'Unknown',
-              createdAt: d.createdAt || null,
-            };
-          });
-          setPrivateMessages(msgs);
+          setPrivateMessages(
+            snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+          );
         },
-        err => console.error('[ChatRoomScreen] private snapshot error:', err?.message),
+        err => console.error('[ChatRoom] private error:', err?.message),
       );
 
-    return () => {
-      isMounted.current = false;
-      unsub();
-    };
+    return () => { isMounted.current = false; unsub(); };
   }, [roomType, contactId]);
 
   useEffect(() => () => { isMounted.current = false; }, []);
 
   const messages =
-    roomType === 'private'
-      ? privateMessages
-      : Array.isArray(publicMessages)
-      ? publicMessages
-      : [];
+    roomType === 'private' ? privateMessages : (publicMessages || []);
 
-  const handleSend = async text => {
+  const handleSend = useCallback(async text => {
     try {
-      if (!text?.trim()) return;
-      const col =
-        roomType === 'private' && contactId
-          ? `private_${contactId}`
-          : 'general_chat';
+      const col = roomType === 'private' && contactId
+        ? `private_${contactId}`
+        : 'general_chat';
       await firestore().collection(col).add({
-        text: text.trim(),
+        text,
         userAlias: userAlias || 'Unknown',
         createdAt: firestore.FieldValue.serverTimestamp(),
       });
     } catch (err) {
-      console.error('[ChatRoomScreen] handleSend error:', err?.message);
+      console.error('[ChatRoom] send error:', err?.message);
     }
-  };
+  }, [roomType, contactId, userAlias]);
 
-  const keyExtractor = (item, index) => item?.id || String(index);
+  const keyExtractor = useCallback(
+    (item, index) => item?.id || String(index),
+    [],
+  );
 
-  const renderItem = ({ item }) => {
-    try {
-      return (
-        <ChatBubble
-          message={item}
-          isOwnMessage={item?.userAlias === userAlias}
-        />
-      );
-    } catch (e) {
-      console.error('[ChatRoomScreen] renderItem error:', e?.message);
-      return null;
-    }
-  };
+  const renderItem = useCallback(({ item }) => (
+    <ChatBubble
+      message={item}
+      isOwnMessage={item?.userAlias === userAlias}
+    />
+  ), [userAlias]);
 
-  const handleBack = () => {
-    try {
-      navigation.goBack();
-    } catch (e) {
-      console.error('[ChatRoomScreen] goBack error:', e?.message);
-    }
-  };
+  const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -126,6 +99,10 @@ export default function ChatRoomScreen({ route, navigation }) {
           renderItem={renderItem}
           contentContainerStyle={styles.messageList}
           inverted
+          removeClippedSubviews
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          initialNumToRender={20}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>Belum ada pesan</Text>
@@ -139,9 +116,9 @@ export default function ChatRoomScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#111' },
-  flex: { flex: 1 },
-  messageList: { padding: 10, flexGrow: 1, justifyContent: 'flex-end' },
+  container:      { flex: 1, backgroundColor: '#111' },
+  flex:           { flex: 1 },
+  messageList:    { padding: 10, flexGrow: 1, justifyContent: 'flex-end' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  emptyText: { color: '#555', fontSize: 14 },
+  emptyText:      { color: '#555', fontSize: 14 },
 });
