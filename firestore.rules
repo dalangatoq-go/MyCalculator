@@ -1,13 +1,13 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
     // TOLAK SEMUA AKSES SECARA DEFAULT
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // AKSES RUANG OBROLAN — hanya user yang sudah sign in (anonymous)
-    // Catatan: anonymous auth digunakan lewat kode stealth di kalkulator
+    // ── RUANG PUBLIK ──────────────────────────────────────────────
     match /general_chat/{messageId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
@@ -18,5 +18,19 @@ service cloud.firestore {
                     && request.resource.data.userAlias is string;
       allow update, delete: if false;
     }
+
+    // ── RUANG CHAT PRIVAT (private_vit, private_luna, dst.) ───────
+    match /{roomId}/{messageId} {
+      allow read: if roomId.matches('private_.+') && request.auth != null;
+      allow create: if roomId.matches('private_.+')
+                    && request.auth != null
+                    && request.resource.data.keys().hasAll(['text', 'userAlias', 'createdAt'])
+                    && request.resource.data.text is string
+                    && request.resource.data.text.size() > 0
+                    && request.resource.data.text.size() <= 1000
+                    && request.resource.data.userAlias is string;
+      allow update, delete: if false;
+    }
+
   }
 }
