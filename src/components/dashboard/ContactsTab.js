@@ -1,28 +1,44 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
+import { AuthContext } from '../../contexts/AuthContext';
 import ContactCard from './ContactCard';
 import EmptyState from './EmptyState';
 
-const CONTACTS = [
-  { id: 'vit',   name: 'Vit',   status: 'online',  preview: 'Siap!',               time: '10:30', unread: 2 },
-  { id: 'luna',  name: 'Luna',  status: 'offline', preview: 'Besok ya...',          time: '09:15', unread: 0 },
-  { id: 'alex',  name: 'Alex',  status: 'online',  preview: 'Ok cuy',              time: '08:50', unread: 1 },
-  { id: 'sarah', name: 'Sarah', status: 'away',    preview: 'Tunggu sebentar',     time: 'Kemarin', unread: 0 },
-  { id: 'niko',  name: 'Niko',  status: 'offline', preview: 'Gak bisa hari ini',   time: 'Kemarin', unread: 0 },
+const ALL_USERS = [
+  { name: 'SanQua',    color: '#457b9d' },
+  { name: 'Hass',      color: '#9b59b6' },
+  { name: 'Vit',       color: '#e67e22' },
+  { name: 'Cleo',      color: '#e91e63' },
+  { name: 'LeMinerale', color: '#2a9d8f' },
 ];
 
 export default function ContactsTab({ onOpenChat }) {
-  const renderItem = ({ item }) => (
-    <ContactCard
-      contact={item}
-      onPress={() => onOpenChat({ roomType: 'private', contactId: item.id, roomTitle: item.name })}
-    />
-  );
+  const { userAlias } = useContext(AuthContext);
+  const myId = (userAlias || '').toLowerCase();
+
+  const contacts = ALL_USERS
+    .map(u => ({ ...u, id: u.name.toLowerCase() }))
+    .filter(u => u.id !== myId);
+
+  const renderItem = ({ item }) => {
+    // Canonical room ID — sama dari kedua sisi
+    const roomId = [myId, item.id].sort().join('_');
+    return (
+      <ContactCard
+        contact={item}
+        onPress={() => onOpenChat({
+          roomType: 'private',
+          contactId: roomId,
+          roomTitle: item.name,
+        })}
+      />
+    );
+  };
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={CONTACTS}
+        data={contacts}
         keyExtractor={item => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
