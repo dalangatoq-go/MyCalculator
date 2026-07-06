@@ -1,51 +1,113 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-export default function ContactCard({ contact, onPress }) {
-  const { name, color } = contact;
-  const avatarBg = color || '#444';
+const AVATAR_COLORS = {
+  sanqua:    '#1565C0',
+  hass:      '#2E7D32',
+  vit:       '#6A1B9A',
+  cleo:      '#AD1457',
+  lemineral: '#E65100',
+  lemineral_alt: '#E65100',
+};
 
-  return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
-      <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
-        <Text style={styles.avatarText}>{name[0].toUpperCase()}</Text>
-      </View>
-      <View style={styles.body}>
-        <Text style={styles.name}>{name}</Text>
-      </View>
-      <Text style={styles.chevron}>›</Text>
-    </TouchableOpacity>
-  );
+function formatTime(ts) {
+  if (!ts) return '';
+  try {
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    const now = new Date();
+    const diffDays = Math.floor((now - d) / 86400000);
+    if (diffDays === 0) {
+      return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    }
+    if (diffDays === 1) return 'Kemarin';
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  } catch {
+    return '';
+  }
 }
 
+const ContactCard = memo(function ContactCard({ contact, lastMessage, onPress }) {
+  const { id, name, color } = contact;
+  const avatarBg   = color || AVATAR_COLORS[id] || '#333';
+  const preview    = lastMessage?.text    || '';
+  const timestamp  = lastMessage?.time    || null;
+  const unread     = lastMessage?.unread  || 0;
+
+  return (
+    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
+      {/* Avatar */}
+      <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
+        <Text style={styles.avatarText}>{name[0].toUpperCase()}</Text>
+        <View style={styles.onlineDot} />
+      </View>
+
+      {/* Body */}
+      <View style={styles.body}>
+        <View style={styles.topRow}>
+          <Text style={styles.name}>{name}</Text>
+          {!!timestamp && <Text style={styles.time}>{formatTime(timestamp)}</Text>}
+        </View>
+        <View style={styles.bottomRow}>
+          <Text style={styles.preview} numberOfLines={1}>
+            {preview || ''}
+          </Text>
+          {unread > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+});
+
+export default ContactCard;
+
 const styles = StyleSheet.create({
-  card: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    marginHorizontal: 18,
-    marginVertical: 5,
-    borderRadius: 16,
-    padding: 14,
     paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.04)',
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    position: 'relative',
   },
-  avatarText: { color: 'rgba(255,255,255,0.95)', fontSize: 18, fontWeight: '700' },
-  body:       { flex: 1 },
-  name:       { color: '#E8E8EC', fontSize: 15, fontWeight: '600', letterSpacing: -0.2 },
-  chevron:    { color: '#3A3A42', fontSize: 22 },
+  avatarText: { color: '#FFF', fontSize: 20, fontWeight: '700' },
+  onlineDot: {
+    position: 'absolute',
+    bottom: 2,
+    left: 2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#4CAF50',
+    borderWidth: 2,
+    borderColor: '#0D0D0F',
+  },
+  body: { flex: 1 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  bottomRow: { flexDirection: 'row', alignItems: 'center' },
+  name: { color: '#E8E8EC', fontSize: 15, fontWeight: '600' },
+  time: { color: '#555', fontSize: 12 },
+  preview: { color: '#666', fontSize: 13, flex: 1, marginRight: 8 },
+  badge: {
+    backgroundColor: '#1E7BEF',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  badgeText: { color: '#FFF', fontSize: 10, fontWeight: '800' },
 });
