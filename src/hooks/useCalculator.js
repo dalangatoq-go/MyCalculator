@@ -3,9 +3,9 @@ import { evaluate } from '../utils/mathEvaluator';
 import { AuthContext } from '../contexts/AuthContext';
 
 export const useCalculator = () => {
-  const [display, setDisplay] = useState('0');
+  const [display, setDisplay]   = useState('0');
   const [sequence, setSequence] = useState('');
-  const { signInWithAlias } = useContext(AuthContext);
+  const { signInWithAlias }     = useContext(AuthContext);
 
   const STEALTH_CODES = {
     '28+=': 'SanQua',
@@ -30,8 +30,11 @@ export const useCalculator = () => {
       setDisplay('0');
       try {
         await signInWithAlias(alias);
-      } catch (error) {
-        console.error('[useCalculator] signInWithAlias gagal:', error);
+      } catch (err) {
+        // ALIAS_LOCKED atau error lain → reset diam-diam tanpa pesan error
+        // Kalkulator terlihat normal, kode seolah tidak terjadi apa-apa
+        setDisplay('0');
+        setSequence('');
       }
       return;
     }

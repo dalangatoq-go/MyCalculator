@@ -1,82 +1,79 @@
-import React, { useEffect, useRef } from 'react';
-import { Alert } from 'react-native';
+import React, { useEffect } from 'react';
+import { Alert, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import messaging from '@react-native-firebase/messaging';
-import { AuthProvider } from './src/contexts/AuthContext';
+import { AuthProvider, AuthContext } from './src/contexts/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
-// Ref navigasi global — dipakai agar notif bisa navigasi dari luar React tree
-export const navigationRef = React.createRef();
-
 /**
- * Handler background/quit — HARUS didefinisikan di luar komponen React.
- * Dipanggil saat app di background atau tertutup.
+ * Handler background/quit — HARUS di luar komponen React.
+ * Dipanggil saat app di background/mati dan notif diterima.
+ * Tidak ada navigasi — biarkan app membuka layar terakhirnya.
  */
 messaging().setBackgroundMessageHandler(async () => {
-  // Pesan diproses silent; navigasi ditangani di onNotificationOpenedApp
-  // atau getInitialNotification saat user tap notif.
+  // Proses silent. Saat user tap notif, Android akan membuka
+  // app secara normal dari awal (Calculator) atau foreground
+  // dari state terakhir. Tidak ada navigasi paksa ke chat.
 });
 
-export default function App() {
-  const routeNameRef = useRef();
+function AppContent() {
+  const { isLoadingSession } = React.useContext(AuthContext);
 
   useEffect(() => {
-    // ── 1. Pesan FOREGROUND (app sedang terbuka) ──────────────────
+    // ── Notif FOREGROUND (app sedang terbuka) ────────────────────
+    // Tampilkan sebagai alert "update" — tidak ada tombol ke chat
     const unsubForeground = messaging().onMessage(async remoteMessage => {
       const { title, body } = remoteMessage.notification || {};
-      const data = remoteMessage.data || {};
-
-      // Tampilkan alert tersamar — sama persis dengan notif system
       Alert.alert(
         title || 'MyCalculator Pro',
         body  || 'APK membutuhkan pembaruan. Ketuk untuk memperbarui.',
-        [
-          { text: 'Nanti', style: 'cancel' },
-          { text: 'Perbarui', onPress: () => navigateToChat(data) },
-        ],
+        [{ text: 'OK' }],
       );
     });
 
-    // ── 2. App di BACKGROUND → user tap notif ────────────────────
-    const unsubBackground = messaging().onNotificationOpenedApp(remoteMessage => {
-      navigateToChat(remoteMessage?.data || {});
+    // ── Notif BACKGROUND/KILLED → user tap ───────────────────────
+    // Android membuka app secara alami — tidak ada navigate paksa.
+    // Tidak perlu handler khusus; biarkan sistem yang handle.
+    messaging().onNotificationOpenedApp(() => {
+      // Sengaja kosong — app terbuka ke Calculator atau Dashboard
+      // sesuai state terakhir. User masuk lewat kode seperti biasa.
     });
 
-    // ── 3. App DITUTUP → user tap notif → app dibuka ─────────────
-    messaging().getInitialNotification().then(remoteMessage => {
-      if (remoteMessage) {
-        setTimeout(() => navigateToChat(remoteMessage.data || {}), 500);
-      }
+    messaging().getInitialNotification().then(() => {
+      // Sengaja kosong — sama seperti di atas.
     });
 
-    return () => {
-      unsubForeground();
-      unsubBackground();
-    };
+    return () => unsubForeground();
   }, []);
 
+  // Tampilkan layar kosong gelap selama sesi dipulihkan dari storage
+  // agar layar kalkulator tidak "kedip" muncul lalu langsung loncat ke dashboard
+  if (isLoadingSession) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color="#333" />
+      </View>
+    );
+  }
+
+  return <AppNavigator />;
+}
+
+export default function App() {
   return (
     <AuthProvider>
-      <NavigationContainer
-        ref={navigationRef}
-        onReady={() => {
-          routeNameRef.current = navigationRef.current?.getCurrentRoute()?.name;
-        }}>
-        <AppNavigator />
+      <NavigationContainer>
+        <AppContent />
       </NavigationContainer>
     </AuthProvider>
   );
 }
 
-/**
- * Navigasi ke ChatRoom berdasarkan data payload FCM.
- * data = { type, roomId, senderAlias, roomTitle }
- */
-function navigateToChat(data) {
-  if (data?.type !== 'message' || !data?.roomId) return;
-  navigationRef.current?.navigate('ChatRoom', {
-    roomType:  'private',
-    contactId: data.roomId,
-    roomTitle: data.roomTitle || data.senderAlias || 'Chat',
-  });
-}
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
