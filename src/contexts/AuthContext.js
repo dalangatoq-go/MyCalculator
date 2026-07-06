@@ -1,5 +1,6 @@
 import React, { createContext, useState } from 'react';
 import auth from '@react-native-firebase/auth';
+import { registerFCMToken, unregisterFCMToken } from '../utils/notifications';
 
 export const AuthContext = createContext();
 
@@ -12,20 +13,25 @@ export const AuthProvider = ({ children }) => {
       await auth().signInAnonymously();
       setUserAlias(alias);
       setIsAuthenticated(true);
+
+      // Daftarkan FCM token setelah login berhasil
+      await registerFCMToken(alias);
     } catch (error) {
       console.error('[AuthContext] signInAnonymously gagal:', error);
-      throw error; // lempar ulang agar caller bisa handle
+      throw error;
     }
   };
 
   const signOut = async () => {
     try {
+      // Hapus FCM token dari Firestore sebelum logout
+      if (userAlias) {
+        await unregisterFCMToken(userAlias);
+      }
       await auth().signOut();
-      setIsAuthenticated(false);
-      setUserAlias(null);
     } catch (error) {
       console.error('[AuthContext] signOut gagal:', error);
-      // Tetap reset state lokal walau Firebase gagal
+    } finally {
       setIsAuthenticated(false);
       setUserAlias(null);
     }

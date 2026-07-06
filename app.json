@@ -25,10 +25,15 @@
         "backgroundColor": "#0A0A0A"
       },
       "googleServicesFile": "./google-services.json",
-      "permissions": []
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE"
+      ]
     },
     "plugins": [
       "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
       [
         "expo-build-properties",
         {
