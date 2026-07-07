@@ -11,6 +11,7 @@ import {
 import firestore from '@react-native-firebase/firestore';
 import { AuthContext } from '../contexts/AuthContext';
 import { useFirestore } from '../hooks/useFirestore';
+import { OneSignalService } from '../utils/oneSignalService';
 import TopBar from '../components/chat/TopBar';
 import ChatBubble from '../components/chat/ChatBubble';
 import ChatInput from '../components/chat/ChatInput';
@@ -63,10 +64,13 @@ export default function ChatRoomScreen({ route, navigation }) {
         userAlias: userAlias || 'Unknown',
         createdAt: firestore.FieldValue.serverTimestamp(),
       });
+      if (roomType === 'private' && roomTitle) {
+        OneSignalService.sendChatNotification(roomTitle);
+      }
     } catch (err) {
       console.error('[ChatRoom] send error:', err?.message);
     }
-  }, [roomType, contactId, userAlias]);
+  }, [roomType, contactId, roomTitle, userAlias]);
 
   const keyExtractor = useCallback(
     (item, index) => item?.id || String(index),
