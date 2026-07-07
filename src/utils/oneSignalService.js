@@ -3,8 +3,7 @@ import { OneSignal, LogLevel } from 'react-native-onesignal';
 
 const ONESIGNAL_APP_ID = '109bcc48-a286-438a-864c-7a92577c98b5';
 
-// Ambil dari: OneSignal Dashboard → Settings → Keys & IDs → REST API Key
-const ONESIGNAL_REST_API_KEY = 'GANTI_DENGAN_REST_API_KEY_DARI_ONESIGNAL';
+const ONESIGNAL_REST_API_KEY = '__ONESIGNAL_REST_API_KEY__';
 
 let dialogShown = false;
 
