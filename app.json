@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "MyCalculator-Pro",
-    "slug": "mycalculator-pro",
+    "slug": "MyCalculator-Pro",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -33,7 +33,7 @@
     },
     "plugins": [
       "@react-native-firebase/app",
-      "@react-native-firebase/messaging",
+      "react-native-onesignal",
       [
         "expo-build-properties",
         {
@@ -48,9 +48,7 @@
     ],
     "owner": "way303s-team",
     "extra": {
-      "eas": {
-        "projectId": "cf8a244e-3450-4dc3-be2e-8f4a33458e66"
-      }
+      "eas": {}
     }
   }
 }
