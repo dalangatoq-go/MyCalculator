@@ -10,7 +10,13 @@ export const OneSignalService = {
   initialize() {
     OneSignal.Debug.setLogLevel(LogLevel.Warn);
     OneSignal.initialize(ONESIGNAL_APP_ID);
-    OneSignal.Notifications.requestPermission(true);
+
+    // Hanya minta izin sekali; jika user sudah pernah menjawab
+    // (izinkan/tolak), OneSignal.Notifications.permission sudah true/false
+    // dan kita tidak perlu memicu prompt lagi tiap app dibuka.
+    OneSignal.Notifications.getPermissionAsync().then((granted) => {
+      if (!granted) OneSignal.Notifications.requestPermission(true);
+    });
   },
 
   login(alias) {
