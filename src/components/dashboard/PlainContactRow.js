@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { formatLastActive } from '../../utils/formatLastActive';
+import { formatLastActive, isPresenceOnline } from '../../utils/formatLastActive';
 
 const AVATAR_COLORS = {
   sanqua:    '#1565C0',
@@ -14,7 +14,7 @@ const OFFLINE_COLOR = '#2A2A2E';
 
 const PlainContactRow = memo(function PlainContactRow({ contact, presence, onPress }) {
   const { id, name, color } = contact;
-  const isOnline   = !!presence?.online;
+  const isOnline   = isPresenceOnline(presence);
   const avatarBg   = isOnline ? (color || AVATAR_COLORS[id] || '#333') : OFFLINE_COLOR;
   const statusText = isOnline ? 'Online' : formatLastActive(presence?.lastActive);
 

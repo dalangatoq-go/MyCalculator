@@ -1,3 +1,18 @@
+// Firestore presence tidak punya "onDisconnect" (itu fitur Realtime
+// Database, bukan Firestore) — jika app ditutup paksa/koneksi putus
+// tanpa sempat menulis status offline, dokumen bisa "online: true" basi.
+// Untuk itu status online efektif juga disyaratkan lastActive masih
+// baru (di bawah ambang ini), bukan cuma percaya field `online` mentah.
+export const PRESENCE_STALE_MS = 60000; // 60 detik (> interval heartbeat 25 detik)
+
+export function isPresenceOnline(presence) {
+  if (!presence?.online || !presence?.lastActive) return false;
+  const ts = presence.lastActive.toMillis
+    ? presence.lastActive.toMillis()
+    : new Date(presence.lastActive).getTime();
+  return Date.now() - ts < PRESENCE_STALE_MS;
+}
+
 export function formatLastActive(ts) {
   if (!ts) return 'Belum pernah aktif';
   try {

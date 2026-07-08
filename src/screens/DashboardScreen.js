@@ -35,6 +35,10 @@ export default function DashboardScreen({ navigation }) {
   const handleBottomTabChange = (idx) => {
     setBottomTab(idx);
     if (idx === 1) setTopTab(0);   // Kontak → langsung ke tab Kontak
+    if (idx !== 0) {               // Tutup search bar saat keluar dari tab Chat
+      setSearchVisible(false);
+      setSearchText('');
+    }
   };
 
   const renderMainContent = () => {
