@@ -8,20 +8,20 @@ import ChatRoomScreen from '../screens/ChatRoomScreen';
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-  const { isAuthenticated } = useContext(AuthContext);
+  // Gunakan isUIAuthenticated (bukan isAuthenticated)
+  // → app SELALU buka sebagai kalkulator, meski sesi tersimpan
+  const { isUIAuthenticated } = useContext(AuthContext);
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {!isAuthenticated ? (
+      {!isUIAuthenticated ? (
+        // Belum ketik kode stealth sesi ini → tampilkan kalkulator
         <Stack.Screen name="Calculator" component={CalculatorScreen} />
       ) : (
+        // Sudah ketik kode stealth → masuk dashboard & chat
         <>
           <Stack.Screen name="Dashboard" component={DashboardScreen} />
-          <Stack.Screen
-            name="ChatRoom"
-            component={ChatRoomScreen}
-            options={{ gestureEnabled: false, animation: 'slide_from_right' }}
-          />
+          <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
         </>
       )}
     </Stack.Navigator>
