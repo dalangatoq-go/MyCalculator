@@ -3,9 +3,11 @@ import {
   View, TextInput, StyleSheet, TouchableOpacity, Text, SafeAreaView,
 } from 'react-native';
 import { AuthContext } from '../contexts/AuthContext';
+import { usePresenceHeartbeat } from '../hooks/usePresence';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import TopTabs from '../components/dashboard/TopTabs';
 import ContactsTab from '../components/dashboard/ContactsTab';
+import ContactsListTab from '../components/dashboard/ContactsListTab';
 import PublicRoomTab from '../components/dashboard/PublicRoomTab';
 import ProjectAreaTab from '../components/dashboard/ProjectAreaTab';
 import BottomNav from '../components/dashboard/BottomNav';
@@ -14,9 +16,13 @@ import SettingsTab from '../components/dashboard/SettingsTab';
 export default function DashboardScreen({ navigation }) {
   const { userAlias, signOut } = useContext(AuthContext);
 
+  // Dashboard hanya mount saat UI ter-autentikasi → alias ini dianggap
+  // "online" secara real selama komponen ini hidup & app di foreground.
+  usePresenceHeartbeat((userAlias || '').toLowerCase(), true);
+
   // Bottom nav: 0=Chat, 1=Kontak, 2=Pengaturan
   const [bottomTab, setBottomTab] = useState(0);
-  // Top tabs (inside Chat bottom tab): 0=Kontak, 1=Ruang Publik, 2=Project Area
+  // Top tabs (inside Chat bottom tab): 0=Chat, 1=Ruang Publik, 2=Project Area
   const [topTab, setTopTab] = useState(0);
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -37,9 +43,17 @@ export default function DashboardScreen({ navigation }) {
       return <SettingsTab />;
     }
 
-    // Chat + Kontak bottom tab → top tabs
-    const activeTop = bottomTab === 1 ? 0 : topTab;
+    // Kontak bottom tab → daftar kontak polos, layar penuh, tanpa
+    // top tabs/FAB (bukan tampilan chat, cuma phonebook + status online).
+    if (bottomTab === 1) {
+      return (
+        <View style={styles.tabContent}>
+          <ContactsListTab onOpenChat={openChat} />
+        </View>
+      );
+    }
 
+    // Chat bottom tab → top tabs (Chat / Ruang Publik / Project Area)
     return (
       <>
         {/* Search bar */}
@@ -61,19 +75,16 @@ export default function DashboardScreen({ navigation }) {
           </View>
         )}
 
-        <TopTabs
-          activeTab={activeTop}
-          onTabChange={idx => { setTopTab(idx); if (bottomTab === 1) setBottomTab(0); }}
-        />
+        <TopTabs activeTab={topTab} onTabChange={setTopTab} />
 
         <View style={styles.tabContent}>
-          {activeTop === 0 && <ContactsTab onOpenChat={openChat} />}
-          {activeTop === 1 && <PublicRoomTab onOpenChat={openChat} />}
-          {activeTop === 2 && <ProjectAreaTab />}
+          {topTab === 0 && <ContactsTab onOpenChat={openChat} />}
+          {topTab === 1 && <PublicRoomTab onOpenChat={openChat} />}
+          {topTab === 2 && <ProjectAreaTab />}
         </View>
 
-        {/* FAB — only on Kontak tab */}
-        {activeTop === 0 && (
+        {/* FAB — only on Chat tab */}
+        {topTab === 0 && (
           <TouchableOpacity
             style={styles.fab}
             activeOpacity={0.85}

@@ -49,6 +49,17 @@ export default function ContactsTab({ onOpenChat }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myId]);
 
+  // Hanya tampilkan kontak yang benar-benar pernah ada percakapan
+  // (seperti daftar chat WhatsApp — tidak ada slot kosong/placeholder),
+  // diurutkan otomatis: pesan/percakapan terbaru di posisi paling atas.
+  const chatList = contacts
+    .filter(c => !!lastMessages[c.id])
+    .sort((a, b) => {
+      const ta = lastMessages[a.id]?.time?.toMillis ? lastMessages[a.id].time.toMillis() : 0;
+      const tb = lastMessages[b.id]?.time?.toMillis ? lastMessages[b.id].time.toMillis() : 0;
+      return tb - ta;
+    });
+
   const renderItem = ({ item }) => {
     const roomId = [myId, item.id].sort().join('_');
     return (
@@ -67,11 +78,11 @@ export default function ContactsTab({ onOpenChat }) {
   return (
     <View style={styles.container}>
       <FlatList
-        data={contacts}
+        data={chatList}
         keyExtractor={item => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={<EmptyState icon="👥" message="Tidak ada kontak" />}
+        ListEmptyComponent={<EmptyState icon="💬" message="Belum ada percakapan" />}
         showsVerticalScrollIndicator={false}
       />
     </View>

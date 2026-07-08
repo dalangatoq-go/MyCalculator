@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-const TABS = ['Kontak', 'Ruang Publik', 'Project Area'];
+const TABS = ['Chat', 'Ruang Publik', 'Project Area'];
 
 export default function TopTabs({ activeTab, onTabChange, publicUnread = 0 }) {
   return (
