@@ -1,37 +1,16 @@
-import { Alert } from 'react-native';
 import { OneSignal, LogLevel } from 'react-native-onesignal';
 
 const ONESIGNAL_APP_ID = '109bcc48-a286-438a-864c-7a92577c98b5';
 
-const ONESIGNAL_REST_API_KEY = '__ONESIGNAL_REST_API_KEY__';
-
-let dialogShown = false;
-
-function isRegistered(subscriptionId) {
-  return !!subscriptionId && !subscriptionId.startsWith('local-');
-}
-
-function maybeShowIntegrationCompleteDialog(subscriptionId) {
-  if (isRegistered(subscriptionId) && !dialogShown) {
-    dialogShown = true;
-    Alert.alert(
-      'Your OneSignal SDK integration is complete!',
-      'You can now send Push Notifications & In-App Messages through OneSignal. Tap below to enable push notifications.',
-      [{ text: 'Got it', onPress: () => OneSignal.Notifications.requestPermission(true) }],
-      { cancelable: false },
-    );
-  }
-}
+// Diisi lewat env var saat build (EXPO_PUBLIC_ONESIGNAL_REST_API_KEY),
+// jangan pernah hardcode key asli di sini karena repo ini publik.
+const ONESIGNAL_REST_API_KEY = process.env.EXPO_PUBLIC_ONESIGNAL_REST_API_KEY || '';
 
 export const OneSignalService = {
   initialize() {
     OneSignal.Debug.setLogLevel(LogLevel.Warn);
     OneSignal.initialize(ONESIGNAL_APP_ID);
-
-    OneSignal.User.pushSubscription.addEventListener('change', (subscription) => {
-      maybeShowIntegrationCompleteDialog(subscription.current.id);
-    });
-    OneSignal.User.pushSubscription.getIdAsync().then(maybeShowIntegrationCompleteDialog);
+    OneSignal.Notifications.requestPermission(true);
   },
 
   login(alias) {
@@ -49,7 +28,10 @@ export const OneSignalService = {
   },
 
   async sendChatNotification(recipientAlias) {
-    if (!recipientAlias || ONESIGNAL_REST_API_KEY.startsWith('GANTI_')) return;
+    if (!recipientAlias || !ONESIGNAL_REST_API_KEY) {
+      console.warn('[OneSignal] REST API Key belum diset, notif tidak dikirim.');
+      return;
+    }
     try {
       await fetch('https://onesignal.com/api/v1/notifications', {
         method: 'POST',
