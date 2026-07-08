@@ -48,7 +48,9 @@
     ],
     "owner": "way303s-team",
     "extra": {
-      "eas": {}
+      "eas": {
+        "projectId": "b19b2901-63ee-4b88-a657-a75161ca6d59"
+      }
     }
   }
 }
