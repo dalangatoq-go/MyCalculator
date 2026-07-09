@@ -33,7 +33,12 @@
     },
     "plugins": [
       "@react-native-firebase/app",
-      "react-native-onesignal",
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "production"
+        }
+      ],
       [
         "expo-build-properties",
         {
