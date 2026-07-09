@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import {
-  View, TextInput, StyleSheet, TouchableOpacity, Text, SafeAreaView,
+  View, TextInput, StyleSheet, TouchableOpacity, Text, SafeAreaView, Modal, Alert,
 } from 'react-native';
 import { AuthContext } from '../contexts/AuthContext';
 import { usePresenceHeartbeat } from '../hooks/usePresence';
@@ -33,6 +33,15 @@ export default function DashboardScreen({ navigation }) {
   const [topTab, setTopTab]               = useState(0);
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchText, setSearchText]       = useState('');
+  const [moreMenuVisible, setMoreMenuVisible] = useState(false);
+
+  // Menu gulir bawah untuk tombol titik 3 di header.
+  // Item masih placeholder — belum ada halaman/navigasi baru.
+  const handleMoreMenuItem = (item) => {
+    setMoreMenuVisible(false);
+    console.log(`[MoreMenu] ${item} ditekan`);
+    Alert.alert(item);
+  };
 
   const openChat = ({ roomType, contactId, roomId, roomTitle }) => {
     navigation.navigate('ChatRoom', { roomType, contactId, roomId, roomTitle });
@@ -108,13 +117,44 @@ export default function DashboardScreen({ navigation }) {
         <DashboardHeader
           onMenuPress={() => {}}
           onSearchPress={() => setSearchVisible(v => !v)}
-          onMorePress={() => setBottomTab(2)}
+          onMorePress={() => setMoreMenuVisible(true)}
         />
         <View style={styles.flex}>
           {renderMainContent()}
         </View>
         <BottomNav activeTab={bottomTab} onTabChange={handleBottomTabChange} />
       </View>
+
+      {/* Menu gulir bawah — tombol titik 3 di header */}
+      <Modal
+        visible={moreMenuVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setMoreMenuVisible(false)}>
+        <TouchableOpacity
+          style={styles.sheetOverlay}
+          activeOpacity={1}
+          onPress={() => setMoreMenuVisible(false)}>
+          <View style={styles.sheetContainer} onStartShouldSetResponder={() => true}>
+            <View style={styles.sheetHandle} />
+            <TouchableOpacity
+              style={styles.sheetItem}
+              onPress={() => handleMoreMenuItem('Gallery')}>
+              <Text style={styles.sheetItemText}>Gallery</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sheetItem}
+              onPress={() => handleMoreMenuItem('Info App')}>
+              <Text style={styles.sheetItemText}>Info App</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.sheetItem, styles.sheetItemLast]}
+              onPress={() => handleMoreMenuItem('Ganti Nama Kontak')}>
+              <Text style={styles.sheetItemText}>Ganti Nama Kontak</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -156,4 +196,32 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   fabIcon: { fontSize: 22 },
+  sheetOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  sheetContainer: {
+    backgroundColor: CARD,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    paddingTop: 10,
+    paddingBottom: 24,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: BORDER,
+    alignSelf: 'center',
+    marginBottom: 8,
+  },
+  sheetItem: {
+    paddingHorizontal: 22,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: BORDER,
+  },
+  sheetItemLast: { borderBottomWidth: 0 },
+  sheetItemText: { color: TEXT1, fontSize: 16, fontWeight: '500' },
 });
