@@ -25,18 +25,17 @@ const NOTIF_BODY    = 'APK membutuhkan pembaruan. Ketuk untuk memperbarui.';
 
 /**
  * Pisahkan roomId → dua participant ID.
- * roomId = [id1, id2].sort().join('_')
+ * roomId = [id1, id2].sort().join('_')   (format dari ContactsTab.js)
+ *
+ * Algoritma: coba semua pasangan dari KNOWN_USERS, rekonstruksi roomId
+ * dengan cara yang sama seperti client, lalu cocokkan.
+ * Lebih sederhana dan bebas dari bug tumpang-tindih prefix/suffix.
  */
 function parseParticipants(roomId) {
-  const sorted = [...KNOWN_USERS].sort((a, b) => b.length - a.length);
-  for (const u of sorted) {
-    if (roomId.startsWith(u + '_')) {
-      const other = roomId.slice(u.length + 1);
-      if (KNOWN_USERS.includes(other)) return [u, other];
-    }
-    if (roomId.endsWith('_' + u)) {
-      const other = roomId.slice(0, roomId.length - u.length - 1);
-      if (KNOWN_USERS.includes(other)) return [other, u];
+  for (let i = 0; i < KNOWN_USERS.length; i++) {
+    for (let j = i + 1; j < KNOWN_USERS.length; j++) {
+      const candidate = [KNOWN_USERS[i], KNOWN_USERS[j]].sort().join('_');
+      if (candidate === roomId) return [KNOWN_USERS[i], KNOWN_USERS[j]];
     }
   }
   return null;
@@ -109,7 +108,7 @@ exports.onPrivateMessageCreated = functions.firestore
       const response = await admin.messaging().send(message);
       functions.logger.info('[FCM] Terkirim ke', recipientId, '→', response);
     } catch (err) {
-      functions.logger.error('[FCM] Gagal kirim:', err?.message);
+      functions.logger.error('[FCM] Gagal kirim:', err);
     }
 
     return null;
