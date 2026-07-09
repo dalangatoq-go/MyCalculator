@@ -14,7 +14,10 @@ const PlainContactRow = memo(function PlainContactRow({ contact, presence, onPre
   const statusText = isOnline ? 'Online' : formatLastActive(presence?.lastActive);
 
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={[styles.row, !isOnline && styles.rowDim]}
+      onPress={onPress}
+      activeOpacity={0.7}>
       <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
         <Text style={[styles.avatarText, !isOnline && styles.avatarTextDim]}>
           {name[0].toUpperCase()}
@@ -39,6 +42,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: C.border,
+  },
+  rowDim: {
+    opacity: 0.5,
   },
   avatar: {
     width: 46,
