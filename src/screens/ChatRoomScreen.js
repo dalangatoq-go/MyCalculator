@@ -127,6 +127,8 @@ export default function ChatRoomScreen({ route, navigation }) {
         userAlias={userAlias}
         onLogout={signOut}
         onBack={handleBack}
+        roomType={roomType}
+        contactAlias={roomType === 'private' ? (roomTitle || '').toLowerCase() : null}
       />
       <KeyboardAvoidingView
         style={styles.flex}

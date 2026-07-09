@@ -1,16 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import firestore from '@react-native-firebase/firestore';
 import { C, AVATAR_COLORS } from '../../theme/colors';
+import { isPresenceOnline, formatLastActive } from '../../utils/formatLastActive';
 
 /**
  * Header layar chat — gaya WhatsApp.
- * Avatar initial + nama + status Online.
+ * Avatar initial + nama + status.
+ * Untuk chat pribadi, status online/offline dibaca real-time dari
+ * koleksi `presence` (bukan hardcode) — lihat usePresence.js.
  * Logout dipindah ke menu ⋮ agar tidak mencolok.
  */
-export default function TopBar({ userAlias, onLogout, title, onBack }) {
+export default function TopBar({ userAlias, onLogout, title, onBack, roomType, contactAlias }) {
   const label    = title || userAlias || 'Chat';
   const initial  = label[0].toUpperCase();
   const avatarBg = AVATAR_COLORS[(title || '').toLowerCase()] || C.accent;
+
+  const isPrivate = roomType === 'private';
+  const [presence, setPresence] = useState(null);
+
+  useEffect(() => {
+    if (!isPrivate || !contactAlias) {
+      setPresence(null);
+      return undefined;
+    }
+    const unsub = firestore()
+      .collection('presence')
+      .doc(contactAlias)
+      .onSnapshot(
+        doc => {
+          const data = doc.data();
+          setPresence({
+            online: !!data?.online,
+            lastActive: data?.lastActive || null,
+          });
+        },
+        () => {},
+      );
+    return () => unsub();
+  }, [isPrivate, contactAlias]);
+
+  const online     = isPrivate ? isPresenceOnline(presence) : true;
+  const statusText = isPrivate
+    ? (online ? 'Online' : formatLastActive(presence?.lastActive))
+    : 'Online';
 
   const handleMore = () => {
     Alert.alert(
@@ -40,7 +73,7 @@ export default function TopBar({ userAlias, onLogout, title, onBack }) {
 
       <View style={styles.info}>
         <Text style={styles.title} numberOfLines={1}>{label}</Text>
-        <Text style={styles.sub}>Online</Text>
+        <Text style={[styles.sub, !online && styles.subOffline]}>{statusText}</Text>
       </View>
 
       <TouchableOpacity
@@ -78,6 +111,7 @@ const styles = StyleSheet.create({
   info:       { flex: 1 },
   title:      { color: C.text1, fontSize: 16, fontWeight: '600' },
   sub:        { color: C.online, fontSize: 12, marginTop: 1 },
+  subOffline: { color: C.text3 },
   moreBtn:    {},
   moreIcon:   { color: C.text2, fontSize: 24, fontWeight: '700' },
 });
