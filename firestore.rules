@@ -10,34 +10,49 @@ service cloud.firestore {
     // ── RUANG PUBLIK ──────────────────────────────────────────────
     match /general_chat/{messageId} {
       allow read: if request.auth != null;
+
       allow create: if request.auth != null
                     && request.resource.data.keys().hasAll(['text', 'userAlias', 'createdAt'])
                     && request.resource.data.text is string
                     && request.resource.data.text.size() > 0
                     && request.resource.data.text.size() <= 1000
-                    && request.resource.data.userAlias is string;
-      allow update, delete: if false;
+                    && request.resource.data.userAlias is string
+                    // senderUid opsional (backward compat), tapi jika ada harus == auth.uid
+                    && (!request.resource.data.keys().hasAny(['senderUid'])
+                        || request.resource.data.senderUid == request.auth.uid);
+
+      // Hanya pengirim asli (via senderUid) yang boleh menghapus pesannya sendiri.
+      allow delete: if request.auth != null
+                    && resource.data.senderUid == request.auth.uid;
+
+      allow update: if false;
     }
 
     // ── RUANG CHAT PRIVAT ─────────────────────────────────────────
     match /{roomId}/{messageId} {
       allow read: if roomId.matches('private_.+') && request.auth != null;
+
       allow create: if roomId.matches('private_.+')
                     && request.auth != null
                     && request.resource.data.keys().hasAll(['text', 'userAlias', 'createdAt'])
                     && request.resource.data.text is string
                     && request.resource.data.text.size() > 0
                     && request.resource.data.text.size() <= 1000
-                    && request.resource.data.userAlias is string;
-      allow update, delete: if false;
+                    && request.resource.data.userAlias is string
+                    // senderUid opsional (backward compat), tapi jika ada harus == auth.uid
+                    && (!request.resource.data.keys().hasAny(['senderUid'])
+                        || request.resource.data.senderUid == request.auth.uid);
+
+      // Hanya pengirim asli (via senderUid) yang boleh menghapus pesannya sendiri.
+      allow delete: if request.auth != null
+                    && resource.data.senderUid == request.auth.uid;
+
+      allow update: if false;
     }
 
     // ── FCM TOKENS (untuk push notifikasi) ───────────────────────
     // Client hanya boleh MENULIS token miliknya sendiri.
-    // - read & delete: if false → hanya Cloud Functions (service account)
-    //   yang bisa baca/hapus; client tidak perlu akses itu.
-    // - write: validasi field ketat — hanya field 'token' (string non-kosong)
-    //   yang boleh ditulis; data liar tidak bisa disisipkan.
+    // Cloud Functions membaca dengan service account (bypass rules).
     match /fcm_tokens/{aliasId} {
       allow read:   if false;
       allow write:  if request.auth != null
@@ -48,16 +63,11 @@ service cloud.firestore {
     }
 
     // ── PRESENCE (status online/offline & terakhir aktif) ────────
-    // Semua user yang login boleh baca status siapa saja (perlu untuk
-    // lampu online di daftar kontak), tapi hanya field online/lastActive
-    // yang boleh ditulis — tidak ada data lain yang bisa disisipkan.
     match /presence/{aliasId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null
                    && request.resource.data.keys().hasOnly(['online', 'lastActive'])
                    && request.resource.data.online is bool
-                   // lastActive wajib timestamp server saat ini (serverTimestamp()),
-                   // bukan angka/tanggal sembarang kiriman client.
                    && request.resource.data.lastActive == request.time;
       allow delete: if false;
     }
