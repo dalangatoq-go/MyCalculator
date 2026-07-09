@@ -1,22 +1,19 @@
 import React, { memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { formatTime } from '../../utils/timeFormatter';
+import { C } from '../../theme/colors';
 
 /**
- * Gelembung pesan.
- * - isOwnMessage : true jika pesan milik user sendiri
- * - onLongPress  : dipanggil saat user long-press pesan miliknya
- *                  (parent yang menampilkan dialog hapus)
+ * Gelembung pesan gaya WhatsApp — Gen-Z indigo theme.
+ * isOwnMessage → kanan (sent indigo), else → kiri (dark received).
+ * Long-press pada pesan sendiri → callback hapus.
  */
 const ChatBubble = memo(function ChatBubble({ message, isOwnMessage, onLongPress }) {
   if (!message) return null;
 
   let timestamp = null;
-  try {
-    timestamp = message.createdAt?.toDate?.() ?? message.createdAt ?? null;
-  } catch {
-    timestamp = null;
-  }
+  try { timestamp = message.createdAt?.toDate?.() ?? message.createdAt ?? null; }
+  catch { timestamp = null; }
 
   return (
     <TouchableOpacity
@@ -25,13 +22,18 @@ const ChatBubble = memo(function ChatBubble({ message, isOwnMessage, onLongPress
       activeOpacity={isOwnMessage ? 0.75 : 1}
       accessible
       accessibilityHint={isOwnMessage ? 'Tahan untuk menghapus pesan' : undefined}
+      style={[styles.wrapper, isOwnMessage ? styles.wrapRight : styles.wrapLeft]}
     >
-      <View style={[styles.bubble, isOwnMessage ? styles.right : styles.left]}>
+      <View style={[styles.bubble, isOwnMessage ? styles.sent : styles.received]}>
         {!isOwnMessage && !!message.userAlias && (
           <Text style={styles.alias}>{message.userAlias}</Text>
         )}
-        <Text style={styles.text}>{message.text || ''}</Text>
-        <Text style={styles.time}>{formatTime(timestamp)}</Text>
+        <Text style={[styles.text, isOwnMessage && styles.textSent]}>
+          {message.text || ''}
+        </Text>
+        <Text style={[styles.time, isOwnMessage && styles.timeSent]}>
+          {formatTime(timestamp)}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -40,25 +42,29 @@ const ChatBubble = memo(function ChatBubble({ message, isOwnMessage, onLongPress
 export default ChatBubble;
 
 const styles = StyleSheet.create({
+  wrapper:   { marginVertical: 2, marginHorizontal: 10 },
+  wrapRight: { alignItems: 'flex-end' },
+  wrapLeft:  { alignItems: 'flex-start' },
   bubble: {
-    paddingHorizontal: 12,
-    paddingVertical:   8,
-    marginVertical:    3,
-    marginHorizontal:  8,
-    borderRadius:      12,
-    maxWidth:          '80%',
+    maxWidth: '78%',
+    paddingHorizontal: 13,
+    paddingTop: 8,
+    paddingBottom: 7,
+    borderRadius: 18,
   },
-  right: {
-    alignSelf:       'flex-end',
-    backgroundColor: '#1A6B3A',   // hijau WA-style untuk pesan sendiri
-    borderBottomRightRadius: 3,
+  sent: {
+    backgroundColor: C.bubbleSent,
+    borderBottomRightRadius: 4,
   },
-  left: {
-    alignSelf:       'flex-start',
-    backgroundColor: '#2A2A2E',   // abu gelap untuk pesan lawan bicara
-    borderBottomLeftRadius: 3,
+  received: {
+    backgroundColor: C.bubbleReceived,
+    borderBottomLeftRadius: 4,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: C.border,
   },
-  alias: { color: '#FFD700', fontSize: 11, fontWeight: '600', marginBottom: 2 },
-  text:  { color: '#F0F0F0', fontSize: 15, lineHeight: 20 },
-  time:  { color: 'rgba(255,255,255,0.45)', fontSize: 10, textAlign: 'right', marginTop: 4 },
+  alias:    { color: C.accentLight, fontSize: 11.5, fontWeight: '700', marginBottom: 3 },
+  text:     { color: C.text1, fontSize: 15, lineHeight: 21 },
+  textSent: { color: '#FFFFFF' },
+  time:     { color: C.text2, fontSize: 10.5, textAlign: 'right', marginTop: 4 },
+  timeSent: { color: 'rgba(255,255,255,0.50)' },
 });

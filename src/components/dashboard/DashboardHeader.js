@@ -1,35 +1,33 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { C } from '../../theme/colors';
 
+/**
+ * Header utama dashboard — gaya WhatsApp.
+ * Logo "S" (indigo) + brand name kiri, search + more kanan.
+ */
 export default function DashboardHeader({ onMenuPress, onSearchPress, onMorePress }) {
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={onMenuPress} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-        <Text style={styles.menu}>☰</Text>
-      </TouchableOpacity>
-
       <View style={styles.brand}>
-        <View style={styles.shieldBox}>
-          <Text style={styles.shieldIcon}>🔒</Text>
+        <View style={styles.logoBox}>
+          <Text style={styles.logoLetter}>S</Text>
         </View>
-        <Text style={styles.brandName}>
-          <Text style={styles.blue}>Sky-Secuure</Text>
-          <Text style={styles.white}> Chat</Text>
-        </Text>
+        <Text style={styles.brandName}>Skyline</Text>
       </View>
 
       <View style={styles.actions}>
         <TouchableOpacity
           onPress={onSearchPress}
           style={styles.iconBtn}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Text style={styles.actionIcon}>🔍</Text>
+          hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}>
+          <Text style={styles.iconText}>⌕</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={onMorePress}
           style={styles.iconBtn}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Text style={styles.actionIconLg}>⋮</Text>
+          hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}>
+          <Text style={styles.iconText}>⋮</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -40,28 +38,23 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 50,
+    paddingHorizontal: 18,
+    paddingTop: 52,
     paddingBottom: 14,
-    backgroundColor: '#0D0D0F',
+    backgroundColor: C.surface,
   },
-  menu: { color: '#E8E8EC', fontSize: 20 },
-  brand: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  shieldBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#1E7BEF',
+  brand:      { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  logoBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: C.accent,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
   },
-  shieldIcon: { fontSize: 16 },
-  brandName: { fontSize: 17, fontWeight: '700', letterSpacing: -0.3 },
-  blue:  { color: '#1E7BEF' },
-  white: { color: '#E8E8EC' },
-  actions: { flexDirection: 'row', alignItems: 'center' },
-  iconBtn: { marginLeft: 4, padding: 4 },
-  actionIcon: { fontSize: 16, color: '#E8E8EC' },
-  actionIconLg: { fontSize: 22, color: '#E8E8EC', lineHeight: 24 },
+  logoLetter: { color: '#FFF', fontSize: 16, fontWeight: '800' },
+  brandName:  { color: C.text1, fontSize: 22, fontWeight: '700', letterSpacing: -0.4 },
+  actions:    { flexDirection: 'row', gap: 4 },
+  iconBtn:    { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
+  iconText:   { color: C.text2, fontSize: 22, fontWeight: '600' },
 });
