@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -9,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 import { AuthContext } from '../contexts/AuthContext';
 import { useFirestore } from '../hooks/useFirestore';
 import TopBar from '../components/chat/TopBar';
@@ -23,7 +25,7 @@ export default function ChatRoomScreen({ route, navigation }) {
   } = route?.params || {};
 
   const { userAlias, signOut } = useContext(AuthContext);
-  const publicMessages          = useFirestore();
+  const publicMessages         = useFirestore();
   const [privateMessages, setPrivateMessages] = useState([]);
   const isMounted = useRef(true);
 
@@ -50,25 +52,58 @@ export default function ChatRoomScreen({ route, navigation }) {
 
   useEffect(() => () => { isMounted.current = false; }, []);
 
-  const messages =
-    roomType === 'private' ? privateMessages : (publicMessages || []);
+  const messages = roomType === 'private' ? privateMessages : (publicMessages || []);
 
+  // Nama koleksi Firestore berdasarkan tipe ruang
+  const collectionName = useCallback(() =>
+    roomType === 'private' && contactId
+      ? `private_${contactId}`
+      : 'general_chat',
+  [roomType, contactId]);
+
+  // ── Kirim pesan ───────────────────────────────────────────────────
+  // senderUid disimpan agar Firestore rules bisa memvalidasi penghapusan.
   const handleSend = useCallback(async text => {
     try {
-      const col = roomType === 'private' && contactId
-        ? `private_${contactId}`
-        : 'general_chat';
-      await firestore().collection(col).add({
+      const uid = auth().currentUser?.uid || '';
+      await firestore().collection(collectionName()).add({
         text,
         userAlias: userAlias || 'Unknown',
         createdAt: firestore.FieldValue.serverTimestamp(),
+        senderUid: uid,
       });
-      // Notifikasi dikirim otomatis oleh Cloud Functions via FCM
-      // (trigger onPrivateMessageCreated) — tidak perlu kirim dari client.
+      // Notifikasi dikirim otomatis oleh Cloud Functions via FCM.
     } catch (err) {
       console.error('[ChatRoom] send error:', err?.message);
     }
-  }, [roomType, contactId, userAlias]);
+  }, [collectionName, userAlias]);
+
+  // ── Hapus pesan (gaya WA) ─────────────────────────────────────────
+  const handleDelete = useCallback(async (message) => {
+    try {
+      await firestore().collection(collectionName()).doc(message.id).delete();
+    } catch (err) {
+      console.error('[ChatRoom] delete error:', err?.message);
+      Alert.alert('Gagal', 'Pesan tidak dapat dihapus. Coba lagi.');
+    }
+  }, [collectionName]);
+
+  // ── Long-press → dialog WA-style ──────────────────────────────────
+  const handleLongPress = useCallback((message) => {
+    Alert.alert(
+      'Hapus Pesan',
+      'Pesan akan dihapus untuk semua orang.',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Hapus untuk Semua',
+          style: 'destructive',
+          onPress: () => handleDelete(message),
+        },
+      ],
+      { cancelable: true },
+    );
+  }, [handleDelete]);
 
   const keyExtractor = useCallback(
     (item, index) => item?.id || String(index),
@@ -79,8 +114,9 @@ export default function ChatRoomScreen({ route, navigation }) {
     <ChatBubble
       message={item}
       isOwnMessage={item?.userAlias === userAlias}
+      onLongPress={() => handleLongPress(item)}
     />
-  ), [userAlias]);
+  ), [userAlias, handleLongPress]);
 
   const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
