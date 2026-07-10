@@ -1,6 +1,14 @@
 /**
  * Firebase Cloud Functions — MyCalculator-Pro
  *
+ * STATUS: TIDAK DIPAKAI SAAT INI. Project belum di paket Blaze (butuh
+ * kartu pembayaran untuk mengaktifkan Cloud Build API), jadi function ini
+ * tidak bisa di-deploy. Notifikasi chat untuk sementara dikirim langsung
+ * dari client — lihat src/utils/pushNotify.js. Kalau nanti project sudah
+ * bisa pindah ke Blaze, function ini bisa dideploy lagi dan panggilan
+ * client-side di pushNotify.js/ChatRoomScreen.js dicabut supaya tidak
+ * kirim notif dobel.
+ *
  * Trigger : dokumen baru di koleksi "private_*" atau "general_chat" (chat).
  * Notifikasi : dikirim via OneSignal REST API ke External ID (alias)
  *              penerima, bukan lagi via Firebase Cloud Messaging langsung.
@@ -146,6 +154,11 @@ exports.onPrivateMessageCreated = functions.firestore
     const participants = parseParticipants(roomId);
     if (!participants) {
       functions.logger.warn('[OneSignal] Tidak bisa parse roomId:', roomId);
+      return null;
+    }
+
+    if (!participants.includes(senderAlias)) {
+      functions.logger.warn('[OneSignal] Sender bukan bagian dari room:', senderAlias, roomId);
       return null;
     }
 
