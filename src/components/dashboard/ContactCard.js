@@ -38,7 +38,6 @@ const ContactCard = memo(function ContactCard({ contact, lastMessage, onPress })
       {/* Avatar */}
       <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
         <Text style={styles.avatarText}>{name[0].toUpperCase()}</Text>
-        <View style={styles.onlineDot} />
       </View>
 
       {/* Body */}
@@ -83,17 +82,6 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   avatarText: { color: '#FFF', fontSize: 20, fontWeight: '700' },
-  onlineDot: {
-    position: 'absolute',
-    bottom: 2,
-    left: 2,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#4CAF50',
-    borderWidth: 2,
-    borderColor: '#0C0C14',
-  },
   body: { flex: 1 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   bottomRow: { flexDirection: 'row', alignItems: 'center' },
