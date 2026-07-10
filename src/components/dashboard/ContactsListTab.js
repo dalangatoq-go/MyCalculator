@@ -5,12 +5,13 @@ import { useContactsPresence } from '../../hooks/usePresence';
 import PlainContactRow from './PlainContactRow';
 import EmptyState from './EmptyState';
 
+// ID eksplisit — konsisten dengan AVATAR_COLORS dan MoreMenuSheet
 const ALL_USERS = [
-  { name: 'SanQua',     color: '#1565C0' },
-  { name: 'Hass',       color: '#2E7D32' },
-  { name: 'Vit',        color: '#6A1B9A' },
-  { name: 'Cleo',       color: '#AD1457' },
-  { name: 'LeMinerale', color: '#E65100' },
+  { name: 'SanQua',     id: 'sanqua',    color: '#1565C0' },
+  { name: 'Hass',       id: 'hass',      color: '#2E7D32' },
+  { name: 'Vit',        id: 'vit',       color: '#6A1B9A' },
+  { name: 'Cleo',       id: 'cleo',      color: '#AD1457' },
+  { name: 'LeMinerale', id: 'lemineral', color: '#E65100' },
 ];
 
 /**
@@ -24,8 +25,7 @@ export default function ContactsListTab({ onOpenChat, customNames = {} }) {
   const contacts = ALL_USERS
     .map(u => ({
       ...u,
-      id:   u.name.toLowerCase(),
-      name: customNames[u.name.toLowerCase()] || u.name,
+      name: customNames[u.id] || u.name,
     }))
     .filter(u => u.id !== myId);
 
