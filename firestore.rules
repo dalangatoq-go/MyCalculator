@@ -56,22 +56,9 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ── PRESENCE (status online/offline) ─────────────────────────
-    match /presence/{aliasId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-                   && request.resource.data.keys().hasOnly(['online', 'lastActive'])
-                   && request.resource.data.online is bool
-                   && request.resource.data.lastActive == request.time;
-      allow delete: if false;
-    }
-
-    // ── TYPING INDICATORS (poin 7) ───────────────────────────────
-    // Setiap user auth boleh baca/tulis status mengetik di room mana pun.
-    match /typing/{roomId} {
-      allow read:  if request.auth != null;
-      allow write: if request.auth != null;
-    }
+    // ── PRESENCE & TYPING dipindah ke Realtime Database ───────────
+    // Lihat database.rules.json — presence/{alias} dan typing/{roomId}/{alias}
+    // sekarang murni node RTDB dengan onDisconnect, bukan dokumen Firestore.
 
     // ── READ RECEIPTS (poin 8) ────────────────────────────────────
     // Setiap user auth boleh baca/tulis receipt di room mana pun.
