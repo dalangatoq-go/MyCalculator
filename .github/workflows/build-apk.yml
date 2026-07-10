@@ -21,10 +21,6 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Inject OneSignal REST API Key
-        run: |
-          sed -i "s|__ONESIGNAL_REST_API_KEY__|${{ secrets.ONESIGNAL_REST_API_KEY }}|g" src/utils/oneSignalService.js
-
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
@@ -35,3 +31,4 @@ jobs:
         run: eas build --platform android --profile production-apk --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
