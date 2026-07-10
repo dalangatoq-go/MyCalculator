@@ -16,6 +16,7 @@ import { useFirestore } from '../hooks/useFirestore';
 import TopBar from '../components/chat/TopBar';
 import ChatBubble from '../components/chat/ChatBubble';
 import ChatInput from '../components/chat/ChatInput';
+import { sendChatNotification } from '../utils/pushNotify';
 
 export default function ChatRoomScreen({ route, navigation }) {
   const {
@@ -72,11 +73,15 @@ export default function ChatRoomScreen({ route, navigation }) {
         createdAt: firestore.FieldValue.serverTimestamp(),
         senderUid: uid,
       });
-      // Notifikasi dikirim otomatis oleh Cloud Functions via FCM.
+      // Notifikasi dikirim langsung dari client ke OneSignal REST API
+      // (Cloud Functions tidak bisa dipakai tanpa paket Blaze/billing).
+      sendChatNotification(collectionName(), userAlias, roomTitle).catch(
+        (err) => console.error('[ChatRoom] notif error:', err?.message),
+      );
     } catch (err) {
       console.error('[ChatRoom] send error:', err?.message);
     }
-  }, [collectionName, userAlias]);
+  }, [collectionName, userAlias, roomTitle]);
 
   // ── Hapus pesan (gaya WA) ─────────────────────────────────────────
   const handleDelete = useCallback(async (message) => {
