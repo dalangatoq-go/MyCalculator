@@ -15,6 +15,8 @@ import { AuthContext } from '../contexts/AuthContext';
 import { useFirestore } from '../hooks/useFirestore';
 import { useContactsPresence } from '../hooks/usePresence';
 import { useSendTyping, useTypingIndicator } from '../hooks/useTyping';
+import { useDeletedPlaceholders } from '../hooks/useDeletedPlaceholders';
+import { useDeleteForMe } from '../hooks/useDeleteForMe';
 import TopBar from '../components/chat/TopBar';
 import ChatBubble from '../components/chat/ChatBubble';
 import ChatInput  from '../components/chat/ChatInput';
@@ -124,7 +126,25 @@ export default function ChatRoomScreen({ route, navigation }) {
 
   useEffect(() => () => { isMounted.current = false; }, []);
 
-  const messages = roomType === 'private' ? privateMessages : (publicMessages || []);
+  const rawMessages = roomType === 'private' ? privateMessages : (publicMessages || []);
+
+  // ── Hapus untuk semua: placeholder real-time saat pesan hilang dari DB ──
+  const withPlaceholders = useDeletedPlaceholders(rawMessages);
+
+  // ── Hapus untuk saya: sembunyikan hanya di device sendiri (RTDB) ────────
+  const { hiddenIds, hideForMe } = useDeleteForMe(myAlias);
+  const messages = useMemo(
+    () => withPlaceholders.filter((m) => !hiddenIds[m.id]),
+    [withPlaceholders, hiddenIds],
+  );
+
+  // Batas waktu "hapus untuk semua" — 24 jam sejak pesan dikirim.
+  const DELETE_FOR_EVERYONE_LIMIT_MS = 24 * 60 * 60 * 1000;
+  const canDeleteForEveryone = useCallback((message) => {
+    const ms = message?.createdAt?.toMillis ? message.createdAt.toMillis() : 0;
+    if (!ms) return false;
+    return Date.now() - ms <= DELETE_FOR_EVERYONE_LIMIT_MS;
+  }, []);
 
   // ── Kirim pesan ──────────────────────────────────────────
   const handleSend = useCallback(async text => {
@@ -144,8 +164,10 @@ export default function ChatRoomScreen({ route, navigation }) {
     }
   }, [collectionName, userAlias, roomTitle]);
 
-  // ── Hapus pesan ──────────────────────────────────────────
-  const handleDelete = useCallback(async (message) => {
+  // ── Hapus untuk semua orang — hapus asli node/dokumen dari database ──
+  // Bukan flag isDeleted, bukan edit isi jadi teks placeholder — dokumen
+  // benar-benar dihapus. Hanya pengirim yang boleh melakukan ini.
+  const handleDeleteForEveryone = useCallback(async (message) => {
     try {
       await firestore().collection(collectionName()).doc(message.id).delete();
     } catch (err) {
@@ -155,20 +177,28 @@ export default function ChatRoomScreen({ route, navigation }) {
   }, [collectionName]);
 
   const handleLongPress = useCallback((message) => {
-    Alert.alert(
-      'Hapus Pesan',
-      'Pesan akan dihapus untuk semua orang.',
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Hapus untuk Semua',
-          style: 'destructive',
-          onPress: () => handleDelete(message),
-        },
-      ],
-      { cancelable: true },
-    );
-  }, [handleDelete]);
+    if (message?.deletedPlaceholder) return; // placeholder tidak bisa ditekan
+
+    const isOwn = message?.userAlias === userAlias;
+    const options = [{ text: 'Batal', style: 'cancel' }];
+
+    if (isOwn && canDeleteForEveryone(message)) {
+      options.push({
+        text: 'Hapus untuk Semua Orang',
+        style: 'destructive',
+        onPress: () => handleDeleteForEveryone(message),
+      });
+    }
+
+    options.push({
+      text: 'Hapus untuk Saya',
+      onPress: () => hideForMe(message.id),
+    });
+
+    Alert.alert('Hapus Pesan', 'Pilih cara menghapus pesan ini.', options, {
+      cancelable: true,
+    });
+  }, [userAlias, canDeleteForEveryone, handleDeleteForEveryone, hideForMe]);
 
   const keyExtractor = useCallback(
     (item, index) => item?.id || String(index),
@@ -179,7 +209,7 @@ export default function ChatRoomScreen({ route, navigation }) {
     <ChatBubble
       message={item}
       isOwnMessage={item?.userAlias === userAlias}
-      onLongPress={() => handleLongPress(item)}
+      onLongPress={item?.deletedPlaceholder ? undefined : () => handleLongPress(item)}
       recipientLastRead={
         item?.userAlias === userAlias ? recipientLastRead : undefined
       }
