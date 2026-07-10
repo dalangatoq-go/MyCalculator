@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+import database from '@react-native-firebase/database';
 import { AuthContext } from '../../contexts/AuthContext';
 import ContactCard from './ContactCard';
 import EmptyState from './EmptyState';
@@ -13,8 +14,6 @@ const ALL_USERS = [
   { name: 'Cleo',       id: 'cleo',      color: '#AD1457' },
   { name: 'LeMinerale', id: 'lemineral', color: '#E65100' },
 ];
-
-const TYPING_STALE_MS = 6000;
 
 /**
  * Tab Chat — daftar percakapan privat.
@@ -77,32 +76,21 @@ export default function ContactsTab({ onOpenChat, lastReadMap = {}, customNames 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myId, JSON.stringify(lastReadMap)]);
 
-  // ── Listener typing per room (poin 7) ───────────────────────────
+  // ── Listener typing per room (RTDB: typing/{roomId}/{alias}) ─────
   useEffect(() => {
     if (!myId) return undefined;
 
-    const unsubs = contacts.map(contact => {
+    const bindings = contacts.map(contact => {
       const roomId = [myId, contact.id].sort().join('_');
-      return firestore()
-        .collection('typing')
-        .doc(`private_${roomId}`)
-        .onSnapshot(
-          doc => {
-            const data = doc.data() || {};
-            const now  = Date.now();
-            const isTyping = Object.entries(data).some(([alias, ts]) => {
-              if (alias === myId)        return false;
-              if (alias !== contact.id)  return false;
-              const ms = ts?.toMillis ? ts.toMillis() : 0;
-              return now - ms < TYPING_STALE_MS;
-            });
-            setTypingMap(prev => ({ ...prev, [contact.id]: isTyping }));
-          },
-          () => {},
-        );
+      const ref = database().ref(`typing/private_${roomId}/${contact.id}`);
+      const cb = (snapshot) => {
+        setTypingMap(prev => ({ ...prev, [contact.id]: snapshot.val() === true }));
+      };
+      ref.on('value', cb);
+      return { ref, cb };
     });
 
-    return () => unsubs.forEach(u => u());
+    return () => bindings.forEach(({ ref, cb }) => ref.off('value', cb));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myId]);
 
