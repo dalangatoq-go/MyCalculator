@@ -4,8 +4,9 @@ import { C, AVATAR_COLORS } from '../../theme/colors';
 
 /**
  * Header layar chat — gaya WhatsApp.
- * isOnline: true  → "Online" hijau
- * isOnline: false → "Offline" abu
+ * isOnline: true      → titik hijau + "Online"
+ * isOnline: false      → tidak ada tulisan/titik apa pun (tidak ada "Offline"
+ *                          atau "last seen")
  * isOnline: undefined → ruang publik, tidak tampilkan status
  */
 export default function TopBar({ userAlias, onLogout, title, onBack, isOnline }) {
@@ -24,8 +25,9 @@ export default function TopBar({ userAlias, onLogout, title, onBack, isOnline })
     );
   };
 
-  const statusText  = isOnline === true ? 'Online' : isOnline === false ? 'Offline' : null;
-  const statusColor = isOnline === true ? C.online : C.text3;
+  // Hanya tampilkan status saat online — tidak ada "Offline"/last seen.
+  const statusText  = isOnline === true ? 'Online' : null;
+  const statusColor = C.online;
 
   return (
     <View style={styles.container}>

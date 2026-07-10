@@ -30,7 +30,10 @@ export default function ContactsListTab({ onOpenChat, customNames = {} }) {
     .filter(u => u.id !== myId);
 
   const [presence, setPresence] = useState({});
-  useContactsPresence(contacts.map(c => c.id), setPresence);
+  useContactsPresence(
+    contacts.map(c => c.id),
+    setPresence,
+  );
 
   const renderItem = ({ item }) => {
     const roomId = [myId, item.id].sort().join('_');

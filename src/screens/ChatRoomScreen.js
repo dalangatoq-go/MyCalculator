@@ -15,7 +15,6 @@ import { AuthContext } from '../contexts/AuthContext';
 import { useFirestore } from '../hooks/useFirestore';
 import { useContactsPresence } from '../hooks/usePresence';
 import { useSendTyping, useTypingIndicator } from '../hooks/useTyping';
-import { isPresenceOnline } from '../utils/formatLastActive';
 import TopBar from '../components/chat/TopBar';
 import ChatBubble from '../components/chat/ChatBubble';
 import ChatInput  from '../components/chat/ChatInput';
@@ -57,7 +56,7 @@ export default function ChatRoomScreen({ route, navigation }) {
     setPresence,
   );
   const isOnline = contactAlias
-    ? isPresenceOnline(presence[contactAlias])
+    ? presence[contactAlias] === true
     : undefined; // undefined = ruang publik → TopBar tidak tampilkan status
 
   // ── Poin 7: typing indicator ─────────────────────────────

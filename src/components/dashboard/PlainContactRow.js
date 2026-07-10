@@ -1,18 +1,18 @@
 import React, { memo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { formatLastActive, isPresenceOnline } from '../../utils/formatLastActive';
 import { C, AVATAR_COLORS } from '../../theme/colors';
 
 /**
  * Baris kontak di tab Kontak.
- * Online: opacity 1, dot hijau, warna normal (poin 3).
- * Offline: opacity 0.5, tanpa dot (poin 3).
+ * Online: opacity 1, dot hijau di avatar.
+ * Offline: opacity 0.5, tanpa dot, tanpa tulisan apa pun (tidak ada
+ * "Offline" atau "last seen" — hanya redup).
+ * presence: boolean (true = online), berasal langsung dari RTDB.
  */
 const PlainContactRow = memo(function PlainContactRow({ contact, presence, onPress }) {
   const { id, name } = contact;
-  const isOnline   = isPresenceOnline(presence);
-  const avatarBg   = AVATAR_COLORS[id] || C.accent;
-  const statusText = isOnline ? 'Online' : formatLastActive(presence?.lastActive);
+  const isOnline = presence === true;
+  const avatarBg = AVATAR_COLORS[id] || C.accent;
 
   return (
     <TouchableOpacity
@@ -25,7 +25,6 @@ const PlainContactRow = memo(function PlainContactRow({ contact, presence, onPre
       </View>
       <View style={styles.body}>
         <Text style={styles.name}>{name}</Text>
-        <Text style={[styles.status, isOnline && styles.statusOnline]}>{statusText}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -62,9 +61,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: C.bg,
   },
-  avatarText:   { color: '#FFF', fontSize: 17, fontWeight: '700' },
-  body:         { flex: 1 },
-  name:         { color: C.text1, fontSize: 15, fontWeight: '600', marginBottom: 3 },
-  status:       { color: C.text3, fontSize: 12.5 },
-  statusOnline: { color: C.online, fontWeight: '600' },
+  avatarText: { color: '#FFF', fontSize: 17, fontWeight: '700' },
+  body:       { flex: 1 },
+  name:       { color: C.text1, fontSize: 15, fontWeight: '600' },
 });
