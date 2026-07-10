@@ -1,19 +1,20 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import {
   View, TextInput, StyleSheet, TouchableOpacity, Text, SafeAreaView,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../contexts/AuthContext';
 import { usePresenceHeartbeat } from '../hooks/usePresence';
-import DashboardHeader from '../components/dashboard/DashboardHeader';
-import TopTabs from '../components/dashboard/TopTabs';
-import ContactsTab from '../components/dashboard/ContactsTab';
-import ContactsListTab from '../components/dashboard/ContactsListTab';
-import PublicRoomTab from '../components/dashboard/PublicRoomTab';
-import ProjectAreaTab from '../components/dashboard/ProjectAreaTab';
-import BottomNav from '../components/dashboard/BottomNav';
-import SettingsTab from '../components/dashboard/SettingsTab';
+import DashboardHeader  from '../components/dashboard/DashboardHeader';
+import TopTabs          from '../components/dashboard/TopTabs';
+import ContactsTab      from '../components/dashboard/ContactsTab';
+import ContactsListTab  from '../components/dashboard/ContactsListTab';
+import PublicRoomTab    from '../components/dashboard/PublicRoomTab';
+import ProjectAreaTab   from '../components/dashboard/ProjectAreaTab';
+import BottomNav        from '../components/dashboard/BottomNav';
+import SettingsTab      from '../components/dashboard/SettingsTab';
+import MoreMenuSheet    from '../components/dashboard/MoreMenuSheet';
 
-// Warna inline — komponen anak sudah pakai centralized theme
 const BG     = '#0C0C14';
 const CARD   = '#1B1B2A';
 const ACCENT = '#7C6BFF';
@@ -24,17 +25,59 @@ const BORDER = 'rgba(255,255,255,0.07)';
 export default function DashboardScreen({ navigation }) {
   const { userAlias } = useContext(AuthContext);
 
-  // Tandai user ini sebagai "online" selama screen ini aktif
   usePresenceHeartbeat((userAlias || '').toLowerCase(), true);
 
-  // bottom nav: 0=Chat, 1=Kontak, 2=Pengaturan
   const [bottomTab, setBottomTab]         = useState(0);
-  // top tabs (inside Chat): 0=Chat, 1=Ruang Publik, 2=Lainnya
-  const [topTab, setTopTab]               = useState(0);
+  const [topTab,    setTopTab]            = useState(0);
   const [searchVisible, setSearchVisible] = useState(false);
-  const [searchText, setSearchText]       = useState('');
+  const [searchText,    setSearchText]    = useState('');
+
+  // Poin 4: state bottom sheet menu
+  const [showMenu, setShowMenu] = useState(false);
+
+  // Poin 5: lastReadMap → { [roomId]: timestampMs }
+  const [lastReadMap,  setLastReadMap]  = useState({});
+
+  // Poin 4: customNames → { [alias]: string }
+  const [customNames, setCustomNames]   = useState({});
+
+  // Load custom names dari AsyncStorage saat mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const keys = await AsyncStorage.getAllKeys();
+        const nameKeys = keys.filter(k => k.startsWith('@customName_'));
+        if (nameKeys.length === 0) return;
+        const pairs = await AsyncStorage.multiGet(nameKeys);
+        const names = {};
+        pairs.forEach(([key, val]) => {
+          const alias = key.replace('@customName_', '');
+          if (val) names[alias] = val;
+        });
+        setCustomNames(names);
+      } catch {}
+    })();
+  }, []);
+
+  // Callback dari MoreMenuSheet saat nama kontak disimpan/direset
+  const handleRename = useCallback((alias, newName) => {
+    setCustomNames(prev => {
+      const next = { ...prev };
+      if (newName) {
+        next[alias] = newName;
+      } else {
+        delete next[alias];
+      }
+      return next;
+    });
+  }, []);
 
   const openChat = ({ roomType, contactId, roomId, roomTitle }) => {
+    // Tandai room sebagai sudah dibaca
+    if (roomType === 'private' && contactId) {
+      const ts = Date.now();
+      setLastReadMap(prev => ({ ...prev, [contactId]: ts }));
+    }
     navigation.navigate('ChatRoom', { roomType, contactId, roomId, roomTitle });
     setBottomTab(0);
   };
@@ -46,17 +89,17 @@ export default function DashboardScreen({ navigation }) {
   };
 
   const renderMainContent = () => {
+    // Tab Pengaturan TETAP buka halaman profil (poin 4 — tidak berubah)
     if (bottomTab === 2) return <SettingsTab />;
 
     if (bottomTab === 1) {
       return (
         <View style={styles.flex}>
-          <ContactsListTab onOpenChat={openChat} />
+          <ContactsListTab onOpenChat={openChat} customNames={customNames} />
         </View>
       );
     }
 
-    // Chat tab — top tabs + FAB
     return (
       <>
         {searchVisible && (
@@ -80,19 +123,24 @@ export default function DashboardScreen({ navigation }) {
         <TopTabs activeTab={topTab} onTabChange={setTopTab} />
 
         <View style={styles.flex}>
-          {topTab === 0 && <ContactsTab onOpenChat={openChat} />}
+          {topTab === 0 && (
+            <ContactsTab
+              onOpenChat={openChat}
+              lastReadMap={lastReadMap}
+              customNames={customNames}
+            />
+          )}
           {topTab === 1 && <PublicRoomTab onOpenChat={openChat} />}
           {topTab === 2 && <ProjectAreaTab />}
         </View>
 
-        {/* FAB — hanya di tab Chat */}
         {topTab === 0 && (
           <TouchableOpacity
             style={styles.fab}
             activeOpacity={0.85}
             onPress={() => openChat({
-              roomType: 'public',
-              roomId: 'general_chat',
+              roomType:  'public',
+              roomId:    'general_chat',
               roomTitle: 'Ruang Publik',
             })}>
             <Text style={styles.fabIcon}>✏️</Text>
@@ -105,16 +153,25 @@ export default function DashboardScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
+        {/* Poin 4: tombol ⋮ membuka MoreMenuSheet, BUKAN navigasi ke Settings */}
         <DashboardHeader
           onMenuPress={() => {}}
           onSearchPress={() => setSearchVisible(v => !v)}
-          onMorePress={() => setBottomTab(2)}
+          onMorePress={() => setShowMenu(true)}
         />
         <View style={styles.flex}>
           {renderMainContent()}
         </View>
         <BottomNav activeTab={bottomTab} onTabChange={handleBottomTabChange} />
       </View>
+
+      <MoreMenuSheet
+        visible={showMenu}
+        onClose={() => setShowMenu(false)}
+        navigation={navigation}
+        customNames={customNames}
+        onRename={handleRename}
+      />
     </SafeAreaView>
   );
 }

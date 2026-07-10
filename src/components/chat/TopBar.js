@@ -4,10 +4,11 @@ import { C, AVATAR_COLORS } from '../../theme/colors';
 
 /**
  * Header layar chat — gaya WhatsApp.
- * Avatar initial + nama + status Online.
- * Logout dipindah ke menu ⋮ agar tidak mencolok.
+ * isOnline: true  → "Online" hijau
+ * isOnline: false → "Offline" abu
+ * isOnline: undefined → ruang publik, tidak tampilkan status
  */
-export default function TopBar({ userAlias, onLogout, title, onBack }) {
+export default function TopBar({ userAlias, onLogout, title, onBack, isOnline }) {
   const label    = title || userAlias || 'Chat';
   const initial  = label[0].toUpperCase();
   const avatarBg = AVATAR_COLORS[(title || '').toLowerCase()] || C.accent;
@@ -22,6 +23,9 @@ export default function TopBar({ userAlias, onLogout, title, onBack }) {
       { cancelable: true },
     );
   };
+
+  const statusText  = isOnline === true ? 'Online' : isOnline === false ? 'Offline' : null;
+  const statusColor = isOnline === true ? C.online : C.text3;
 
   return (
     <View style={styles.container}>
@@ -40,7 +44,9 @@ export default function TopBar({ userAlias, onLogout, title, onBack }) {
 
       <View style={styles.info}>
         <Text style={styles.title} numberOfLines={1}>{label}</Text>
-        <Text style={styles.sub}>Online</Text>
+        {statusText !== null && (
+          <Text style={[styles.sub, { color: statusColor }]}>{statusText}</Text>
+        )}
       </View>
 
       <TouchableOpacity
@@ -77,7 +83,7 @@ const styles = StyleSheet.create({
   avatarText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
   info:       { flex: 1 },
   title:      { color: C.text1, fontSize: 16, fontWeight: '600' },
-  sub:        { color: C.online, fontSize: 12, marginTop: 1 },
+  sub:        { fontSize: 12, marginTop: 1 },
   moreBtn:    {},
   moreIcon:   { color: C.text2, fontSize: 24, fontWeight: '700' },
 });

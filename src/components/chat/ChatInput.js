@@ -3,30 +3,34 @@ import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-nativ
 import { C } from '../../theme/colors';
 
 /**
- * Komposer pesan gaya WhatsApp — pill input + send circle button.
- * Tombol kirim aktif (berwarna accent) hanya saat ada teks.
- * Ikon mic muncul saat input kosong (placeholder visual).
+ * Komposer pesan — pill input + send button.
+ * onTypingChange(bool): callback saat user mulai/berhenti mengetik.
  */
-export default function ChatInput({ onSend }) {
+export default function ChatInput({ onSend, onTypingChange }) {
   const [text, setText] = useState('');
   const hasText = text.trim().length > 0;
+
+  const handleChangeText = useCallback((val) => {
+    setText(val);
+    onTypingChange?.(val.trim().length > 0);
+  }, [onTypingChange]);
 
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
     if (!trimmed) return;
+    onTypingChange?.(false); // bersihkan typing saat kirim
     onSend(trimmed);
     setText('');
-  }, [text, onSend]);
+  }, [text, onSend, onTypingChange]);
 
   return (
     <View style={styles.container}>
-      {/* Pill input area */}
       <View style={styles.pill}>
         <Text style={styles.emoji}>☺</Text>
         <TextInput
           style={styles.input}
           value={text}
-          onChangeText={setText}
+          onChangeText={handleChangeText}
           placeholder="Pesan..."
           placeholderTextColor={C.text3}
           returnKeyType="send"
@@ -38,7 +42,6 @@ export default function ChatInput({ onSend }) {
         {!hasText && <Text style={styles.attach}>📎</Text>}
       </View>
 
-      {/* Send / Mic button */}
       <TouchableOpacity
         style={[styles.sendBtn, hasText && styles.sendBtnActive]}
         onPress={handleSend}

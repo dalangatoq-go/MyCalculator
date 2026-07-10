@@ -4,25 +4,27 @@ import { formatLastActive, isPresenceOnline } from '../../utils/formatLastActive
 import { C, AVATAR_COLORS } from '../../theme/colors';
 
 /**
- * Baris kontak di tab Kontak — avatar circle + nama + status online.
- * Online dot di kanan bawah avatar (gaya WhatsApp).
+ * Baris kontak di tab Kontak.
+ * Online: opacity 1, dot hijau, warna normal (poin 3).
+ * Offline: opacity 0.5, tanpa dot (poin 3).
  */
 const PlainContactRow = memo(function PlainContactRow({ contact, presence, onPress }) {
   const { id, name } = contact;
   const isOnline   = isPresenceOnline(presence);
-  const avatarBg   = isOnline ? (AVATAR_COLORS[id] || C.accent) : C.card;
+  const avatarBg   = AVATAR_COLORS[id] || C.accent;
   const statusText = isOnline ? 'Online' : formatLastActive(presence?.lastActive);
 
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={[styles.row, !isOnline && styles.rowOffline]}
+      onPress={onPress}
+      activeOpacity={0.7}>
       <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
-        <Text style={[styles.avatarText, !isOnline && styles.avatarTextDim]}>
-          {name[0].toUpperCase()}
-        </Text>
+        <Text style={styles.avatarText}>{name[0].toUpperCase()}</Text>
         {isOnline && <View style={styles.onlineDot} />}
       </View>
       <View style={styles.body}>
-        <Text style={[styles.name, !isOnline && styles.nameDim]}>{name}</Text>
+        <Text style={styles.name}>{name}</Text>
         <Text style={[styles.status, isOnline && styles.statusOnline]}>{statusText}</Text>
       </View>
     </TouchableOpacity>
@@ -40,6 +42,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: C.border,
   },
+  rowOffline: { opacity: 0.5 },
   avatar: {
     width: 46,
     height: 46,
@@ -59,11 +62,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: C.bg,
   },
-  avatarText:    { color: '#FFF', fontSize: 17, fontWeight: '700' },
-  avatarTextDim: { color: C.text3, opacity: 0.7 },
-  body:          { flex: 1 },
-  name:          { color: C.text1, fontSize: 15, fontWeight: '600', marginBottom: 3 },
-  nameDim:       { color: C.text2 },
-  status:        { color: C.text3, fontSize: 12.5 },
-  statusOnline:  { color: C.online, fontWeight: '600' },
+  avatarText:   { color: '#FFF', fontSize: 17, fontWeight: '700' },
+  body:         { flex: 1 },
+  name:         { color: C.text1, fontSize: 15, fontWeight: '600', marginBottom: 3 },
+  status:       { color: C.text3, fontSize: 12.5 },
+  statusOnline: { color: C.online, fontWeight: '600' },
 });

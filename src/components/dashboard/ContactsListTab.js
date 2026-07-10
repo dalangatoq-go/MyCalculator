@@ -14,16 +14,19 @@ const ALL_USERS = [
 ];
 
 /**
- * Daftar kontak polos (bukan gaya chat) untuk tab bawah "Kontak".
- * Menampilkan status online/offline real dari koleksi `presence`,
- * dan waktu aktif terakhir jika sedang offline.
+ * Tab Kontak — daftar kontak dengan status online/offline real-time.
+ * customNames: { [alias]: string } — nama kustom kontak (poin 4).
  */
-export default function ContactsListTab({ onOpenChat }) {
+export default function ContactsListTab({ onOpenChat, customNames = {} }) {
   const { userAlias } = useContext(AuthContext);
   const myId = (userAlias || '').toLowerCase();
 
   const contacts = ALL_USERS
-    .map(u => ({ ...u, id: u.name.toLowerCase() }))
+    .map(u => ({
+      ...u,
+      id:   u.name.toLowerCase(),
+      name: customNames[u.name.toLowerCase()] || u.name,
+    }))
     .filter(u => u.id !== myId);
 
   const [presence, setPresence] = useState({});
@@ -36,7 +39,7 @@ export default function ContactsListTab({ onOpenChat }) {
         contact={item}
         presence={presence[item.id]}
         onPress={() => onOpenChat({
-          roomType: 'private',
+          roomType:  'private',
           contactId: roomId,
           roomTitle: item.name,
         })}
@@ -60,5 +63,5 @@ export default function ContactsListTab({ onOpenChat }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0D0D0F' },
-  list: { paddingBottom: 30 },
+  list:      { paddingBottom: 30 },
 });

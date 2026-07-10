@@ -7,7 +7,6 @@ const AVATAR_COLORS = {
   vit:       '#6A1B9A',
   cleo:      '#AD1457',
   lemineral: '#E65100',
-  lemineral_alt: '#E65100',
 };
 
 function formatTime(ts) {
@@ -26,33 +25,51 @@ function formatTime(ts) {
   }
 }
 
-const ContactCard = memo(function ContactCard({ contact, lastMessage, onPress }) {
-  const { id, name, color } = contact;
-  const avatarBg   = color || AVATAR_COLORS[id] || '#333';
-  const preview    = lastMessage?.text    || '';
-  const timestamp  = lastMessage?.time    || null;
-  const unread     = lastMessage?.unread  || 0;
+/**
+ * Kartu kontak di tab Chat.
+ * isTyping: tampilkan "sedang mengetik..." di preview (poin 7).
+ * unread > 0: badge merah + nama & preview bold (poin 5 & 6).
+ */
+const ContactCard = memo(function ContactCard({ contact, lastMessage, onPress, isTyping }) {
+  const { id, name } = contact;
+  const avatarBg   = AVATAR_COLORS[id] || '#333';
+  const rawPreview = lastMessage?.text   || '';
+  const timestamp  = lastMessage?.time   || null;
+  const unread     = lastMessage?.unread || 0;
+  const hasUnread  = unread > 0;
+
+  const preview = isTyping ? 'sedang mengetik...' : rawPreview;
 
   return (
     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
-      {/* Avatar */}
       <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
         <Text style={styles.avatarText}>{name[0].toUpperCase()}</Text>
       </View>
 
-      {/* Body */}
       <View style={styles.body}>
         <View style={styles.topRow}>
-          <Text style={styles.name}>{name}</Text>
-          {!!timestamp && <Text style={styles.time}>{formatTime(timestamp)}</Text>}
+          <Text style={[styles.name, hasUnread && styles.nameBold]}>{name}</Text>
+          {!!timestamp && (
+            <Text style={[styles.time, hasUnread && styles.timeUnread]}>
+              {formatTime(timestamp)}
+            </Text>
+          )}
         </View>
         <View style={styles.bottomRow}>
-          <Text style={styles.preview} numberOfLines={1}>
-            {preview || ''}
+          <Text
+            style={[
+              styles.preview,
+              hasUnread && styles.previewBold,
+              isTyping  && styles.previewTyping,
+            ]}
+            numberOfLines={1}>
+            {preview}
           </Text>
-          {unread > 0 && (
+          {hasUnread && (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
+              <Text style={styles.badgeText}>
+                {unread > 99 ? '99+' : unread}
+              </Text>
             </View>
           )}
         </View>
@@ -79,17 +96,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
-    position: 'relative',
   },
-  avatarText: { color: '#FFF', fontSize: 20, fontWeight: '700' },
-  body: { flex: 1 },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  bottomRow: { flexDirection: 'row', alignItems: 'center' },
-  name: { color: '#EEEDF8', fontSize: 15, fontWeight: '600' },
-  time: { color: '#555', fontSize: 12 },
-  preview: { color: '#666', fontSize: 13, flex: 1, marginRight: 8 },
+  avatarText:    { color: '#FFF', fontSize: 20, fontWeight: '700' },
+  body:          { flex: 1 },
+  topRow:        { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  bottomRow:     { flexDirection: 'row', alignItems: 'center' },
+  name:          { color: '#EEEDF8', fontSize: 15, fontWeight: '500' },
+  nameBold:      { fontWeight: '700' },
+  time:          { color: '#555', fontSize: 12 },
+  timeUnread:    { color: '#FF3B30', fontWeight: '600' },
+  preview:       { color: '#666', fontSize: 13, flex: 1, marginRight: 8 },
+  previewBold:   { color: '#AAAFBB', fontWeight: '700' },
+  previewTyping: { color: '#4ADE80', fontStyle: 'italic' },
   badge: {
-    backgroundColor: '#7C6BFF',
+    backgroundColor: '#FF3B30',
     borderRadius: 10,
     minWidth: 20,
     height: 20,

@@ -4,16 +4,50 @@ import { formatTime } from '../../utils/timeFormatter';
 import { C } from '../../theme/colors';
 
 /**
- * Gelembung pesan gaya WhatsApp — Gen-Z indigo theme.
- * isOwnMessage → kanan (sent indigo), else → kiri (dark received).
- * Long-press pada pesan sendiri → callback hapus.
+ * Gelembung pesan gaya WhatsApp.
+ * recipientLastRead (Timestamp|null): waktu penerima terakhir membaca room.
+ * Jika createdAt <= recipientLastRead → ✓✓ hijau stabilo (dibaca).
+ * Else → ✓ abu (terkirim ke server).
+ * Hanya muncul untuk pesan sendiri di room privat.
  */
-const ChatBubble = memo(function ChatBubble({ message, isOwnMessage, onLongPress }) {
+const ChatBubble = memo(function ChatBubble({
+  message,
+  isOwnMessage,
+  onLongPress,
+  recipientLastRead,
+}) {
   if (!message) return null;
 
   let timestamp = null;
-  try { timestamp = message.createdAt?.toDate?.() ?? message.createdAt ?? null; }
-  catch { timestamp = null; }
+  try {
+    timestamp = message.createdAt?.toDate?.() ?? message.createdAt ?? null;
+  } catch {
+    timestamp = null;
+  }
+
+  // Hitung status ceklis — hanya untuk pesan sendiri & di room privat
+  let tickText  = null;
+  let tickColor = C.text2;
+  if (isOwnMessage && recipientLastRead !== undefined) {
+    const msgMs = message.createdAt?.toMillis
+      ? message.createdAt.toMillis()
+      : timestamp
+      ? timestamp.getTime()
+      : 0;
+    const readMs = recipientLastRead?.toMillis
+      ? recipientLastRead.toMillis()
+      : recipientLastRead
+      ? new Date(recipientLastRead).getTime()
+      : 0;
+
+    if (readMs > 0 && msgMs > 0 && readMs >= msgMs) {
+      tickText  = '✓✓';
+      tickColor = '#25D366'; // hijau stabilo — sudah dibaca
+    } else {
+      tickText  = '✓';
+      tickColor = C.text2;   // abu — terkirim ke server
+    }
+  }
 
   return (
     <TouchableOpacity
@@ -31,9 +65,14 @@ const ChatBubble = memo(function ChatBubble({ message, isOwnMessage, onLongPress
         <Text style={[styles.text, isOwnMessage && styles.textSent]}>
           {message.text || ''}
         </Text>
-        <Text style={[styles.time, isOwnMessage && styles.timeSent]}>
-          {formatTime(timestamp)}
-        </Text>
+        <View style={styles.meta}>
+          <Text style={[styles.time, isOwnMessage && styles.timeSent]}>
+            {formatTime(timestamp)}
+          </Text>
+          {!!tickText && (
+            <Text style={[styles.tick, { color: tickColor }]}>{tickText}</Text>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -65,6 +104,14 @@ const styles = StyleSheet.create({
   alias:    { color: C.accentLight, fontSize: 11.5, fontWeight: '700', marginBottom: 3 },
   text:     { color: C.text1, fontSize: 15, lineHeight: 21 },
   textSent: { color: '#FFFFFF' },
-  time:     { color: C.text2, fontSize: 10.5, textAlign: 'right', marginTop: 4 },
+  meta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: 4,
+    gap: 4,
+  },
+  time:     { color: C.text2, fontSize: 10.5 },
   timeSent: { color: 'rgba(255,255,255,0.50)' },
+  tick:     { fontSize: 11, fontWeight: '700' },
 });
