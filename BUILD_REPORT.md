@@ -9,8 +9,10 @@
 - **Node Version direkomendasikan**: 18.x LTS atau 20.x LTS
 - **npm Version direkomendasikan**: 9.x atau 10.x
 - **Android Package**: `com.stealth.mycalculatorpro`
-- **EAS Project ID**: `10c432e8-b3d2-494c-ba4c-55f92c064941`
-- **EAS Account**: `@dutchman221`
+- **EAS Project ID**: `b19b2901-63ee-4b88-a657-a75161ca6d59`
+- **EAS Account/Owner**: `way303s-team`
+
+> **Catatan**: Laporan build di bawah ini (Build #1 dan #2) dijalankan di bawah akun EAS lama (`dutchman221`, projectId `10c432e8-...`) sebelum project dipindahkan ke akun `way303s-team`. Riwayat build tersebut dipertahankan sebagai catatan historis, tetapi build selanjutnya akan tercatat di bawah project/akun `way303s-team` dengan projectId di atas.
 
 ---
 
@@ -215,10 +217,19 @@ NONE
 
 ## Final Status
 
-**STATUS: READY FOR EXPO EAS BUILD ✅**
+**STATUS: READY FOR EXPO EAS BUILD ✅** (di bawah akun/project EAS `way303s-team`, sesuai `app.json` saat ini)
 
-**AAB BUILD SUCCESSFUL ✅** — `production` profile  
-**APK BUILD SUCCESSFUL ✅** — `production-apk` profile
+**AAB BUILD SUCCESSFUL ✅** (historis, akun lama `dutchman221`) — `production` profile
+**APK BUILD SUCCESSFUL ✅** (historis, akun lama `dutchman221`) — `production-apk` profile
 
-> **APK Download**: https://expo.dev/artifacts/eas/sHOoEs_2BZk7f_GuEFKy4fmhmP982aGaDTDUz0m9i3Q.apk  
-> **AAB Download**: https://expo.dev/artifacts/eas/hNPNo5JAoEZqoipAIRKg-aQUqJ71cHXYsbGtHWb8Z_Q.aab
+> Link download di bawah berasal dari build historis di akun EAS lama dan mungkin sudah tidak aktif/dapat diakses. Jalankan ulang `eas build` di akun `way303s-team` untuk mendapatkan link AAB/APK yang baru:
+>
+> - **APK (historis)**: https://expo.dev/artifacts/eas/sHOoEs_2BZk7f_GuEFKy4fmhmP982aGaDTDUz0m9i3Q.apk
+> - **AAB (historis)**: https://expo.dev/artifacts/eas/hNPNo5JAoEZqoipAIRKg-aQUqJ71cHXYsbGtHWb8Z_Q.aab
+
+## Checklist Sebelum Build Berikutnya (akun `way303s-team`)
+
+1. Login EAS dengan akun `way303s-team`: `eas login`.
+2. Jalankan `eas init` bila diminta, untuk konfirmasi `projectId` di `app.json` sudah tersambung ke akun yang benar.
+3. Set env var yang dibutuhkan client saat build cloud (nilai tidak boleh dicommit ke git): `eas env:create --name EXPO_PUBLIC_ONESIGNAL_REST_API_KEY --visibility secret`.
+4. Jalankan build: `eas build -p android --profile production` (AAB) atau `--profile production-apk` (APK).
