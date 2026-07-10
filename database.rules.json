@@ -15,6 +15,15 @@
           ".validate": "newData.isBoolean() && newData.val() === true"
         }
       }
+    },
+    "deleted_for_me": {
+      "$alias": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "$messageId": {
+          ".validate": "newData.isBoolean() && newData.val() === true"
+        }
+      }
     }
   }
 }
