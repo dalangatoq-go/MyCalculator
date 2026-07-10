@@ -45,18 +45,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Keluar dari Skychat — hancurkan sesi sepenuhnya di memory.
-   * Kembali ke kalkulator; user harus masukkan kode lagi untuk masuk.
+   * Keluar dari Skychat — hanya reset gerbang UI di memory (kembali ke
+   * kalkulator, user harus masukkan kode lagi untuk masuk).
+   *
+   * SENGAJA TIDAK memanggil auth().signOut(): itu akan menghapus kredensial
+   * anonymous Firebase yang tersimpan native di perangkat, sehingga sesi
+   * berikutnya dapat UID anonymous yang BERBEDA. Karena aturan hapus pesan
+   * di Firestore memverifikasi kepemilikan lewat senderUid === auth.uid,
+   * UID yang berubah-ubah membuat pesan lama jadi tidak bisa dihapus lagi
+   * ("Hapus untuk Semua" gagal & pesan kembali ke semula). UID anonymous
+   * dibiarkan stabil per instalasi; yang benar-benar di-reset di sini hanya
+   * status login UI (kode akses tidak pernah disimpan di storage apa pun).
    */
   const signOut = async () => {
-    try {
-      await auth().signOut();
-    } catch (err) {
-      console.error('[AuthContext] signOut gagal:', err?.message);
-    } finally {
-      setIsUIAuthenticated(false);
-      setUserAlias(null);
-    }
+    setIsUIAuthenticated(false);
+    setUserAlias(null);
   };
 
   return (
