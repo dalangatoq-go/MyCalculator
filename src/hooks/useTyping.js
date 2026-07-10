@@ -1,41 +1,43 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import firestore from '@react-native-firebase/firestore';
+import database from '@react-native-firebase/database';
 
 const TYPING_CLEAR_MS = 4000;
-const TYPING_STALE_MS = 6000;
 
 /**
- * Mengirim status mengetik ke Firestore koleksi typing/{roomId}.
+ * Mengirim status mengetik ke Realtime Database: typing/{roomId}/{alias}.
+ * Node = true berarti sedang mengetik. Node dihapus saat berhenti mengetik,
+ * kirim pesan, keluar chat, atau (jaring pengaman) koneksi putus.
  * Returns: setTyping(bool)
  */
 export function useSendTyping(roomId, alias) {
   const clearTimer = useRef(null);
-  const isTyping   = useRef(false);
+  const isTyping    = useRef(false);
+
+  const getRef = useCallback(
+    () => (roomId && alias ? database().ref(`typing/${roomId}/${alias}`) : null),
+    [roomId, alias],
+  );
 
   const clearTyping = useCallback(() => {
-    if (!roomId || !alias) return;
+    const ref = getRef();
+    if (!ref) return;
     isTyping.current = false;
-    firestore()
-      .collection('typing')
-      .doc(roomId)
-      .update({ [alias]: firestore.FieldValue.delete() })
-      .catch(() => {});
-  }, [roomId, alias]);
+    ref.onDisconnect().cancel().catch(() => {});
+    ref.remove().catch(() => {});
+  }, [getRef]);
 
   const setTyping = useCallback(
     (typing) => {
-      if (!roomId || !alias) return;
+      const ref = getRef();
+      if (!ref) return;
+
       if (typing) {
         if (!isTyping.current) {
           isTyping.current = true;
-          firestore()
-            .collection('typing')
-            .doc(roomId)
-            .set(
-              { [alias]: firestore.FieldValue.serverTimestamp() },
-              { merge: true },
-            )
-            .catch(() => {});
+          // Jaring pengaman: kalau koneksi putus saat sedang mengetik
+          // (crash, app dibunuh paksa), node ikut terhapus otomatis.
+          ref.onDisconnect().remove().catch(() => {});
+          ref.set(true).catch(() => {});
         }
         clearTimeout(clearTimer.current);
         clearTimer.current = setTimeout(clearTyping, TYPING_CLEAR_MS);
@@ -44,7 +46,7 @@ export function useSendTyping(roomId, alias) {
         clearTyping();
       }
     },
-    [roomId, alias, clearTyping],
+    [getRef, clearTyping],
   );
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export function useSendTyping(roomId, alias) {
 }
 
 /**
- * Berlangganan status mengetik di sebuah ruang.
+ * Berlangganan status mengetik di sebuah ruang (typing/{roomId}).
  * Returns: array alias yang sedang mengetik (kecuali diri sendiri).
  */
 export function useTypingIndicator(roomId, myAlias) {
@@ -66,25 +68,20 @@ export function useTypingIndicator(roomId, myAlias) {
 
   useEffect(() => {
     if (!roomId) return undefined;
-    const unsub = firestore()
-      .collection('typing')
-      .doc(roomId)
-      .onSnapshot(
-        (doc) => {
-          const data = doc.data() || {};
-          const now  = Date.now();
-          const active = Object.entries(data)
-            .filter(([alias, ts]) => {
-              if (alias === (myAlias || '').toLowerCase()) return false;
-              const ms = ts?.toMillis ? ts.toMillis() : 0;
-              return now - ms < TYPING_STALE_MS;
-            })
-            .map(([alias]) => alias);
-          setTypingUsers(active);
-        },
-        () => setTypingUsers([]),
+
+    const ref = database().ref(`typing/${roomId}`);
+    const my  = (myAlias || '').toLowerCase();
+
+    const cb = (snapshot) => {
+      const data = snapshot.val() || {};
+      const active = Object.keys(data).filter(
+        (alias) => alias !== my && data[alias] === true,
       );
-    return unsub;
+      setTypingUsers(active);
+    };
+
+    ref.on('value', cb);
+    return () => ref.off('value', cb);
   }, [roomId, myAlias]);
 
   return typingUsers;
