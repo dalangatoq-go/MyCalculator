@@ -18,6 +18,18 @@ const ChatBubble = memo(function ChatBubble({
 }) {
   if (!message) return null;
 
+  // Placeholder murni di UI (pesan sudah benar-benar dihapus dari database).
+  // Tidak bisa ditekan lama / dihapus lagi.
+  if (message.deletedPlaceholder) {
+    return (
+      <View style={[styles.wrapper, isOwnMessage ? styles.wrapRight : styles.wrapLeft]}>
+        <View style={[styles.bubble, styles.deletedBubble]}>
+          <Text style={styles.deletedText}>Pesan ini telah dihapus</Text>
+        </View>
+      </View>
+    );
+  }
+
   let timestamp = null;
   try {
     timestamp = message.createdAt?.toDate?.() ?? message.createdAt ?? null;
@@ -51,11 +63,11 @@ const ChatBubble = memo(function ChatBubble({
 
   return (
     <TouchableOpacity
-      onLongPress={isOwnMessage ? onLongPress : undefined}
+      onLongPress={onLongPress}
       delayLongPress={400}
-      activeOpacity={isOwnMessage ? 0.75 : 1}
+      activeOpacity={0.75}
       accessible
-      accessibilityHint={isOwnMessage ? 'Tahan untuk menghapus pesan' : undefined}
+      accessibilityHint="Tahan untuk opsi hapus pesan"
       style={[styles.wrapper, isOwnMessage ? styles.wrapRight : styles.wrapLeft]}
     >
       <View style={[styles.bubble, isOwnMessage ? styles.sent : styles.received]}>
@@ -114,4 +126,11 @@ const styles = StyleSheet.create({
   time:     { color: C.text2, fontSize: 10.5 },
   timeSent: { color: 'rgba(255,255,255,0.50)' },
   tick:     { fontSize: 11, fontWeight: '700' },
+  deletedBubble: {
+    backgroundColor: 'transparent',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: C.border,
+    paddingVertical: 7,
+  },
+  deletedText: { color: C.text3, fontSize: 13.5, fontStyle: 'italic' },
 });
