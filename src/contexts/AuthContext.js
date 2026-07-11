@@ -1,4 +1,5 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { registerFCMToken } from '../utils/notifications';
 
@@ -61,6 +62,33 @@ export const AuthProvider = ({ children }) => {
     setIsUIAuthenticated(false);
     setUserAlias(null);
   };
+
+  // ── Kunci ulang otomatis ke kalkulator saat app pindah ke
+  // background/inactive (minimize, pindah app lain, tekan home) selagi
+  // sesi Skychat sedang terbuka. Proses tetap hidup di RAM, hanya gerbang
+  // UI yang direset — supaya dashboard chat tidak ketahuan kalau HP
+  // dipegang orang lain saat app baru diminimize (belum sampai di-kill).
+  const isUIAuthenticatedRef = useRef(isUIAuthenticated);
+  isUIAuthenticatedRef.current = isUIAuthenticated;
+
+  useEffect(() => {
+    const prevStateRef = { current: AppState.currentState };
+
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      const prevState = prevStateRef.current;
+      if (
+        prevState === 'active' &&
+        nextState.match(/inactive|background/) &&
+        isUIAuthenticatedRef.current
+      ) {
+        setIsUIAuthenticated(false);
+        setUserAlias(null);
+      }
+      prevStateRef.current = nextState;
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   return (
     <AuthContext.Provider
