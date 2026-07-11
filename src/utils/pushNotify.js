@@ -91,8 +91,6 @@ async function sendOneSignalNotification({ externalIds, roomId, senderAlias, roo
 
     if (result?.errors) {
       console.warn('[OneSignal] Terkirim dengan peringatan:', result.errors);
-    } else {
-      console.log('[OneSignal] Terkirim ke', externalIds.join(','), '→', result?.id);
     }
   } catch (err) {
     console.error('[OneSignal] Error kirim notif:', err?.message);
