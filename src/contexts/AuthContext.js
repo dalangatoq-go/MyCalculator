@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import { registerFCMToken } from '../utils/notifications';
 
 export const AuthContext = createContext();
@@ -62,6 +63,36 @@ export const AuthProvider = ({ children }) => {
     setIsUIAuthenticated(false);
     setUserAlias(null);
   };
+
+  /**
+   * Firestore native (react-native-firebase) menyimpan cache offline di
+   * disk secara default (pesan yang pernah disinkron tetap ada di storage
+   * lokal walau UI sudah terkunci/keluar). terminate() melepas instance
+   * yang sedang berjalan (mematikan listener aktif), lalu clearPersistence()
+   * menghapus cache SQLite lokalnya. Panggilan firestore() berikutnya
+   * otomatis membuat instance baru — tidak perlu re-init manual.
+   */
+  const clearLocalChatCache = async () => {
+    try {
+      await firestore().terminate();
+      await firestore().clearPersistence();
+    } catch (err) {
+      console.warn('[AuthContext] clearLocalChatCache gagal:', err?.message);
+    }
+  };
+
+  // Setiap kali sesi Skychat berpindah dari terbuka → terkunci (baik lewat
+  // signOut manual maupun auto-relock saat background), bersihkan sisa
+  // cache chat lama di storage lokal supaya tidak bisa dibaca lagi selagi
+  // app terkunci di kalkulator.
+  const prevAuthRef = useRef(isUIAuthenticated);
+  useEffect(() => {
+    const wasAuthenticated = prevAuthRef.current;
+    prevAuthRef.current = isUIAuthenticated;
+    if (wasAuthenticated && !isUIAuthenticated) {
+      clearLocalChatCache();
+    }
+  }, [isUIAuthenticated]);
 
   // ── Kunci ulang otomatis ke kalkulator saat app pindah ke
   // background/inactive (minimize, pindah app lain, tekan home) selagi
