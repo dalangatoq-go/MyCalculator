@@ -1,15 +1,35 @@
 {
   "project_info": {
     "project_number": "791150769061",
+    "firebase_url": "https://mycalculator-pro123-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "mycalculator-pro123",
     "storage_bucket": "mycalculator-pro123.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:791150769061:android:81b521ea9765c25228ee4c",
+        "android_client_info": {
+          "package_name": "com.brightapps.simplecalc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD07QMa3KMvmjaABA4T7F4L-qmBeSj4Ugc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:791150769061:android:849c51adfb64ebcc28ee4c",
         "android_client_info": {
-          "package_name": "com.stealth.mycalculatorpro"
+          "package_name": "com.calculator.com"
         }
       },
       "oauth_client": [],

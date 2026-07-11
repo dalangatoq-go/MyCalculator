@@ -8,7 +8,7 @@
 - **React Version**: 18.2.0
 - **Node Version direkomendasikan**: 18.x LTS atau 20.x LTS
 - **npm Version direkomendasikan**: 9.x atau 10.x
-- **Android Package**: `com.stealth.mycalculatorpro`
+- **Android Package**: `com.brightapps.simplecalc`
 - **EAS Project ID**: `b19b2901-63ee-4b88-a657-a75161ca6d59`
 - **EAS Account/Owner**: `way303s-team`
 
@@ -103,7 +103,7 @@
 | @react-native-firebase/app | ✅ `^20.3.0` | Plugin terdaftar di app.json |
 | @react-native-firebase/auth | ✅ `^20.3.0` | Anonymous auth via stealth code |
 | @react-native-firebase/firestore | ✅ `^20.3.0` | Realtime chat di koleksi `general_chat` |
-| google-services.json | ✅ Valid | package: `com.stealth.mycalculatorpro` |
+| google-services.json | ✅ Valid | package: `com.brightapps.simplecalc` |
 | Firebase Plugin | ✅ Aktif | `@react-native-firebase/app` di plugins array |
 | Konfigurasi ganda | ✅ Bersih | Tidak ada konflik |
 
