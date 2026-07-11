@@ -36,7 +36,30 @@ export default function DashboardScreen({ navigation }) {
   const [showMenu, setShowMenu] = useState(false);
 
   // Poin 5: lastReadMap → { [roomId]: timestampMs }
+  // Disimpan juga ke AsyncStorage (bukan cuma di memory) — sebelumnya reset
+  // ke {} setiap kali app dibuka ulang, sehingga pesan yang sudah dibaca
+  // sebelumnya tampak seperti belum dibaca lagi (badge merah muncul lagi).
+  const LAST_READ_STORAGE_KEY = '@lastReadMap';
   const [lastReadMap,  setLastReadMap]  = useState({});
+  const [lastReadLoaded, setLastReadLoaded] = useState(false);
+
+  // Load lastReadMap dari AsyncStorage saat mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(LAST_READ_STORAGE_KEY);
+        if (raw) setLastReadMap(JSON.parse(raw));
+      } catch {}
+      setLastReadLoaded(true);
+    })();
+  }, []);
+
+  // Simpan lastReadMap setiap kali berubah (setelah load awal selesai, agar
+  // tidak menimpa data tersimpan dengan {} kosong sebelum load selesai)
+  useEffect(() => {
+    if (!lastReadLoaded) return;
+    AsyncStorage.setItem(LAST_READ_STORAGE_KEY, JSON.stringify(lastReadMap)).catch(() => {});
+  }, [lastReadMap, lastReadLoaded]);
 
   // Poin 4: customNames → { [alias]: string }
   const [customNames, setCustomNames]   = useState({});
@@ -72,13 +95,27 @@ export default function DashboardScreen({ navigation }) {
     });
   }, []);
 
+  const markRoomRead = useCallback((contactId) => {
+    if (!contactId) return;
+    setLastReadMap(prev => ({ ...prev, [contactId]: Date.now() }));
+  }, []);
+
   const openChat = ({ roomType, contactId, roomId, roomTitle }) => {
-    // Tandai room sebagai sudah dibaca
+    // Tandai room sebagai sudah dibaca saat masuk...
     if (roomType === 'private' && contactId) {
-      const ts = Date.now();
-      setLastReadMap(prev => ({ ...prev, [contactId]: ts }));
+      markRoomRead(contactId);
     }
-    navigation.navigate('ChatRoom', { roomType, contactId, roomId, roomTitle });
+    navigation.navigate('ChatRoom', {
+      roomType,
+      contactId,
+      roomId,
+      roomTitle,
+      // ...dan tandai lagi saat keluar, agar pesan yang tiba & terbaca
+      // selama sesi chat ini tidak muncul sebagai belum dibaca di dashboard.
+      onLeaveRoom: roomType === 'private' && contactId
+        ? () => markRoomRead(contactId)
+        : undefined,
+    });
     setBottomTab(0);
   };
 

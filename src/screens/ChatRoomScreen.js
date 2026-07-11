@@ -218,6 +218,22 @@ export default function ChatRoomScreen({ route, navigation }) {
 
   const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
+  // ── Tandai room sebagai sudah dibaca saat KELUAR dari chat ──────────
+  // Sebelumnya dashboard hanya menandai "sudah dibaca" saat MASUK ke chat,
+  // jadi pesan yang datang & terbaca SELAMA sesi ini tetap tercatat sebagai
+  // belum dibaca begitu kembali ke daftar kontak (badge merah muncul lagi
+  // padahal sudah dibaca). Tangkap semua cara keluar (tombol back, gesture,
+  // tombol hardware) lewat listener navigasi, bukan hanya tombol back UI.
+  useEffect(() => {
+    if (roomType !== 'private' || typeof route?.params?.onLeaveRoom !== 'function') {
+      return undefined;
+    }
+    const unsubscribe = navigation.addListener('beforeRemove', () => {
+      route.params.onLeaveRoom();
+    });
+    return unsubscribe;
+  }, [navigation, roomType, route?.params]);
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Poin 2: isOnline real-time */}
