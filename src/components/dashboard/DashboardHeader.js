@@ -1,6 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, StatusBar } from 'react-native';
 import { C } from '../../theme/colors';
+
+// Sama seperti TopBar: header ini ada di dalam SafeAreaView (yang sudah
+// menangani inset di iOS). Di Android, tambahkan tinggi status bar + margin
+// kecil yang wajar alih-alih angka tetap besar yang membuat ruang kosong.
+const HEADER_TOP_SPACING = Platform.select({
+  ios: 8,
+  android: (StatusBar.currentHeight || 24) + 8,
+  default: 8,
+});
 
 /**
  * Header utama dashboard — gaya WhatsApp.
@@ -39,7 +48,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 18,
-    paddingTop: 52,
+    paddingTop: HEADER_TOP_SPACING,
     paddingBottom: 14,
     backgroundColor: C.surface,
   },

@@ -1,6 +1,16 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Platform, StatusBar } from 'react-native';
 import { C, AVATAR_COLORS } from '../../theme/colors';
+
+// Header ini dirender di dalam SafeAreaView, yang di iOS sudah menyediakan
+// inset notch/status bar. Di Android, SafeAreaView tidak melakukan apa-apa,
+// jadi kita tambahkan tinggi status bar secara manual + margin kecil yang
+// wajar (bukan angka tetap besar yang menumpuk dengan inset iOS).
+const HEADER_TOP_SPACING = Platform.select({
+  ios: 8,
+  android: (StatusBar.currentHeight || 24) + 8,
+  default: 8,
+});
 
 /**
  * Header layar chat — gaya WhatsApp.
@@ -66,7 +76,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingTop: 46,
+    paddingTop: HEADER_TOP_SPACING,
     paddingBottom: 12,
     backgroundColor: C.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
