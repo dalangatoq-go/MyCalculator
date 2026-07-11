@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Alert, View, ActivityIndicator, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider, AuthContext } from './src/contexts/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -10,15 +10,10 @@ OneSignalService.initialize();
 function AppContent() {
   const { isLoadingSession } = React.useContext(AuthContext);
 
-  useEffect(() => {
-    const unsub = OneSignalService.addForegroundNotificationListener((event) => {
-      const title = event.notification.title || 'MyCalculator Pro';
-      const body  = event.notification.body  || 'APK membutuhkan pembaruan. Ketuk untuk memperbarui.';
-      event.preventDefault();
-      Alert.alert(title, body, [{ text: 'OK' }]);
-    });
-    return unsub;
-  }, []);
+  // Popup Alert di tengah layar saat notifikasi masuk ketika app terbuka
+  // (foreground) sudah dihapus sesuai permintaan. OneSignal SDK akan
+  // menampilkan notifikasi sistem secara normal (banner), bukan popup
+  // in-app, tanpa perlu listener/handler khusus di sini.
 
   if (isLoadingSession) {
     return (
